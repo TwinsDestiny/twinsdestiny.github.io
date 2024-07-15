@@ -388,7 +388,6 @@ dl dt {
 
                                       tr th:last-child, tr td:last-child {
                                         border-right: 0px;
-                                        border-bottom: 0px;
                                       }
 
                                         table th {
