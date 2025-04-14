@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="altina,twinsdestiny.gin@gmail.com"><title>Java面试 · 未来日记</title><meta name="description" content="Java基础Double和BigDecimal的区别Double使用二进制浮点表示法，存储小数点会丢失精度BigDecimal采用字符串存储小数值，用整数运算模拟浮点运算，用BigInteger存储数值，scale存小数位数
+为什么要有包装类型泛型只能使用引用类型，基本类型无法转成引用类型，集合不存"><meta name="keywords" content="Hexo,HTML,CSS,android,Linux"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><meta name="generator" content="Hexo 7.3.0"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">未来日记</a></h3><div class="description"><p>Nothing lasts forever.</p></div></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a target="_blank" rel="noopener" href="https://www.caicai.me"> CaiCai </a><span>&</span><a target="_blank" rel="noopener" href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/about">关于</a></li><li><a href="/archives">归档</a></li><!--li--><!--  if is_current('links')--><!--    a.current(href="/links")= __('Links')--><!--  else--><!--    a(href="/links")= __('Links')--></div><div class="information"><div class="back_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li></div><div class="avatar"><img src="/images/altina.jpg"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>Java面试</a></h3></div><div class="post-content"><h1 id="Java基础"><a href="#Java基础" class="headerlink" title="Java基础"></a>Java基础</h1><h2 id="Double和BigDecimal的区别"><a href="#Double和BigDecimal的区别" class="headerlink" title="Double和BigDecimal的区别"></a>Double和BigDecimal的区别</h2><p>Double使用二进制浮点表示法，存储小数点会丢失精度<br>BigDecimal采用字符串存储小数值，用整数运算模拟浮点运算，用BigInteger存储数值，scale存小数位数</p>
+<h2 id="为什么要有包装类型"><a href="#为什么要有包装类型" class="headerlink" title="为什么要有包装类型"></a>为什么要有包装类型</h2><p>泛型只能使用引用类型，基本类型无法转成引用类型，集合不存基本类型</p>
+<h2 id="怎么深拷贝"><a href="#怎么深拷贝" class="headerlink" title="怎么深拷贝"></a>怎么深拷贝</h2><ol>
+<li>实现Cloneable接口并重写clone()方法</li>
+<li>序列化和反序列话</li>
+<li>手动递归复制</li>
+</ol>
+<h2 id="ConcurrentHashMap的put过程"><a href="#ConcurrentHashMap的put过程" class="headerlink" title="ConcurrentHashMap的put过程"></a>ConcurrentHashMap的put过程</h2><ol>
+<li>延迟初始化table</li>
+<li>使用CAS插入，避免同一个槽位插入不同数据（槽位为null）</li>
+<li>发现正在扩容时（MOVED），帮助扩容</li>
+<li>如果槽位有数据，用synchronized锁住链表头节点，key存在则更新，不存在则使用尾插入新节点。<br>如果是红黑树，用putTreeVal插入</li>
+<li>如果是链表长度大于8会转红黑树，但数组长度小于64会优先扩容</li>
+<li>当前存储数量+1，判断是否需要扩容</li>
+</ol>
+<h2 id="synchronized和ReentrantLock区别"><a href="#synchronized和ReentrantLock区别" class="headerlink" title="synchronized和ReentrantLock区别"></a>synchronized和ReentrantLock区别</h2><table>
+<thead>
+<tr>
+<th>synchronized</th>
+<th>ReentrantLock</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>自动释放，会阻塞，底层使用monitorenter&#x2F;monitorexit</td>
+<td>手动加锁、解锁，可中断，底层使用AQS实现阻塞队列、锁管理</td>
+</tr>
+<tr>
+<td>都可重入</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="AQS原理"><a href="#AQS原理" class="headerlink" title="AQS原理"></a>AQS原理</h2><p>通过一个共享资源状态state和FIFO队列来实现线程的排队、阻塞、唤醒<br>独占模式：同一时间只能有一个线程持有<br>共享模式：允许多个线程共享资源</p>
+<h1 id="Java多线程"><a href="#Java多线程" class="headerlink" title="Java多线程"></a>Java多线程</h1><h1 id="Jvm"><a href="#Jvm" class="headerlink" title="Jvm"></a>Jvm</h1><h1 id="Spring"><a href="#Spring" class="headerlink" title="Spring"></a>Spring</h1><h2 id="Spring的事务什么情况下会失效"><a href="#Spring的事务什么情况下会失效" class="headerlink" title="Spring的事务什么情况下会失效"></a>Spring的事务什么情况下会失效</h2><ol>
+<li>未捕获异常</li>
+<li>事务传播 属性设置不当</li>
+<li>多数据源事务管理</li>
+<li>非public方法</li>
+<li>this调用</li>
+</ol>
+<h1 id="Mysql"><a href="#Mysql" class="headerlink" title="Mysql"></a>Mysql</h1><h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先刷选主键id，再关联查询（需要索引）</p>
+<h2 id="InnoDb行锁"><a href="#InnoDb行锁" class="headerlink" title="InnoDb行锁"></a>InnoDb行锁</h2><ol>
+<li>记录锁（Record Lock）：单个行记录上的锁</li>
+<li>间隙锁（Gap Lock）：锁定一个范围，不包括记录本身</li>
+<li>临键锁（Next-key Lock）：记录锁+间隙锁，锁定一个范围，包括记录本身</li>
+</ol>
+<h2 id="索引失效"><a href="#索引失效" class="headerlink" title="索引失效"></a>索引失效</h2><ol>
+<li>字符串字段发生隐式转换时</li>
+</ol>
+<h1 id="Oracle"><a href="#Oracle" class="headerlink" title="Oracle"></a>Oracle</h1><h2 id="oracle多表关联"><a href="#oracle多表关联" class="headerlink" title="oracle多表关联"></a>oracle多表关联</h2><ol>
+<li>先过滤数据，再关联</li>
+<li>两个大表使用hash join， &#x2F;* +USE_HASH(a b) *&#x2F;</li>
+<li>关联字段，where字段，排序字段加索引</li>
+<li>如果有时间过滤条件，可以加时间分区</li>
+<li>如果表变化不大，使用物化视图，materialized</li>
+</ol>
+<h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a>Mybatis</h1><h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h1><h2 id="redis和数据库怎么保持数据一致性"><a href="#redis和数据库怎么保持数据一致性" class="headerlink" title="redis和数据库怎么保持数据一致性"></a>redis和数据库怎么保持数据一致性</h2><p>同一个事务中，先删除缓存，更新数据库，发送mq，mq消费端接收消息删除缓存。</p>
+<h2 id="redis节点key同步"><a href="#redis节点key同步" class="headerlink" title="redis节点key同步"></a>redis节点key同步</h2><p>主从、哨兵通过节点PSYNC协议异步复制主节点数据</p>
+<h2 id="redis复制过程"><a href="#redis复制过程" class="headerlink" title="redis复制过程"></a>redis复制过程</h2><p>redis从节点第一次复制，向主节点发送psync，主节点返回runid和offset，执行全量复制<br>后续执行增量复制，从之前主节点offset开始，如果主节点挂了，重新选举，需要重写全量复制。如果是网络问题，原来的runid主节点存活，则继续增量复制。</p>
+<h2 id="redis强一致性"><a href="#redis强一致性" class="headerlink" title="redis强一致性"></a>redis强一致性</h2><p>redisraft，多数节点确认后才能提交<br>使用腾讯的Tendis</p>
+<h2 id="redis哨兵"><a href="#redis哨兵" class="headerlink" title="redis哨兵"></a>redis哨兵</h2><p>监控：检查主从是否正常，哨兵是否在线<br>通知：服务器出现问题，通知其他节点<br>自动故障转移：断开主从连接，重新选取master，并通知各节点<br>哨兵本身不提供数据服务，数量为单数</p>
+<h2 id="哨兵选主过程"><a href="#哨兵选主过程" class="headerlink" title="哨兵选主过程"></a>哨兵选主过程</h2><p>单个哨兵认为主挂了，设置为SRI_S_DOWN，多个哨兵都认为主挂了，则设置为SRI_O_DOWN<br>哨兵竞选，各自有一票，谁先发信息过来，就把票给谁，过半胜。未决出则进行下一次，竞选次数+1。<br>选master，先排除离线的，选响应速度快的，与master最近联系过的，再根据优先级、offset、runid选</p>
+<h1 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a>Kafka</h1><h2 id="依赖zookeeper"><a href="#依赖zookeeper" class="headerlink" title="依赖zookeeper"></a>依赖zookeeper</h2><p>kafka4.0才完全删除zk</p>
+<h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h1><h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
+<h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a>ElasticSearch</h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序</p>
+<h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：组合字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
+<h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ol>
+<li>繁体转简体</li>
+<li>符号替换（，换空格）</li>
+<li>ik分词器</li>
+<li>转小写</li>
+</ol>
+<h1 id="分布式"><a href="#分布式" class="headerlink" title="分布式"></a>分布式</h1><h2 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h2><ul>
+<li>XA协议：TM事务管理器，RM资源管理器，应用程序</li>
+<li>2PC： <ol>
+<li>投票阶段：各参与者都执行SQL，但不提交事务，执行成功返回YES，否则返回NO  </li>
+<li>执行阶段：各参与者都返回YES，就执行commit，有一个NO就回滚事务<br>缺陷：1.同步阻塞 2.TM单点问题 3.数据不一致</li>
+</ol>
+</li>
+<li>3PC：增加先询问数据库是否执行事务，投票阶段增加超时机制，超时后默认提交</li>
+<li>TCC: Try,Confirm,Cancel。应用层实现，实际少有人用</li>
+</ul>
+<h2 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a>事务消息</h2><ol>
+<li>使用RocketMQ</li>
+<li>使用TransactionSynchronizationManager确认事务提交后执行afterCommit</li>
+</ol>
+<h1 id="微服务"><a href="#微服务" class="headerlink" title="微服务"></a>微服务</h1><h1 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h1><h2 id="accessToken防止窃取"><a href="#accessToken防止窃取" class="headerlink" title="accessToken防止窃取"></a>accessToken防止窃取</h2><ol>
+<li>使用https</li>
+<li>存放在cookie，使用http-only</li>
+<li>设置Content-Security-Policy头部限制脚本来源，使用Cookie时加上SameSite属性</li>
+<li>过期时间，使用Refresh Token，绑定设备信息和IP</li>
+<li>强制登出，重制密码</li>
+</ol>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-04-14</span><i class="fa fa-tag"></i><a class="tag" href="/tags/spring/" title="spring">spring </a><a class="tag" href="/tags/java/" title="java">java </a><a class="tag" href="/tags/mysql/" title="mysql">mysql </a><a class="tag" href="/tags/oracle/" title="oracle">oracle </a><a class="tag" href="/tags/redis/" title="redis">redis </a><a class="tag" href="/tags/es/" title="es">es </a><a class="tag" href="/tags/zk/" title="zk">zk </a><a class="tag" href="/tags/kafka/" title="kafka">kafka </a><a class="tag" href="/tags/微服务/" title="微服务">微服务 </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a class="btn" role="navigation" href="/2024/07/15/%E6%B5%8B%E8%AF%95/" title="测试">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
+  el:'#vcomments',
+  notify:false || false, 
+  verify:false|| false, 
+  app_id:'9mYqMtl2iyjbXGL1QcUabAT9-MdYXbMMI',
+  app_key:'XlZzPkr84BOyGDb1joclACRF',
+  placeholder:'Just go go',
+  path: window.location.pathname,
+  avatar:''
+})
+</script></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>
