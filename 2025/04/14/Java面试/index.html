@@ -14,7 +14,7 @@
 <li>如果是链表长度大于8会转红黑树，但数组长度小于64会优先扩容</li>
 <li>当前存储数量+1，判断是否需要扩容</li>
 </ol>
-<h2 id="NIO"><a href="#NIO" class="headerlink" title="NIO"></a>NIO</h2><p>buffer channel seletor<br>client $\rightarrow$ buffer $\rightarrow$ channel $\rightarrow$ seletor $\rightarrow$ thread $\rightarrow$ server<br>channel类似于流，每个channel对应一个buffer缓冲区，channel注册到seletor<br>seletor会根据channel上发生的读写事件，将请求交由某个空闲的线程处理，seletor对应一个或多个线程<br>buffer和channel都是可读可写的</p>
+<h2 id="NIO"><a href="#NIO" class="headerlink" title="NIO"></a>NIO</h2><p>buffer channel seletor<br>client → buffer → channel → seletor → thread → server<br>channel类似于流，每个channel对应一个buffer缓冲区，channel注册到seletor<br>seletor会根据channel上发生的读写事件，将请求交由某个空闲的线程处理，seletor对应一个或多个线程<br>buffer和channel都是可读可写的</p>
 <h1 id="Java多线程"><a href="#Java多线程" class="headerlink" title="Java多线程"></a><em>Java多线程</em></h1><h2 id="ThreadPoolExecutor参数"><a href="#ThreadPoolExecutor参数" class="headerlink" title="ThreadPoolExecutor参数"></a>ThreadPoolExecutor参数</h2><p>int corePoolSize 核心线程池大小<br>int maximumPoolSize 最大线程池大小<br>long keepAliveTime 超时了没有调用就释放线程<br>TimeUnit unit 超时单位<br>BlockingQueue<Runnable> workQueue 阻塞队列<br>ThreadFactory threadFactory 线程工厂，创建线程<br>RejectedExecutionHandler handle 拒绝策略<br>4个拒绝策略  </p>
 <ol>
 <li>AbortPolicy：队列满了，丢弃任务，抛异常  </li>
@@ -356,7 +356,7 @@
 <h2 id="装饰器模式"><a href="#装饰器模式" class="headerlink" title="装饰器模式"></a>装饰器模式</h2><p>向一个现有的对象添加新功能，同时不改变其结构</p>
 <h2 id="模板模式"><a href="#模板模式" class="headerlink" title="模板模式"></a>模板模式</h2><p>抽象类定义方法模板，子类按需重写方法实现，调用方式按抽象类定义执行</p>
 <h1 id="场景题"><a href="#场景题" class="headerlink" title="场景题"></a><em>场景题</em></h1><h2 id="设计秒杀"><a href="#设计秒杀" class="headerlink" title="设计秒杀"></a>设计秒杀</h2><p>静态资源放cdn  </p>
-<p>F5<br>$\downarrow$<br>nginx<br>$\downarrow$<br>open feign<br>$\downarrow$  sentinel和mq 限流<br>服务<br>预热：把商品放入redis<br>库存：lua脚本操作<br>放重：setnx token或IP同一时间一个有效<br>分布式锁：请求原子性<br>$\downarrow$<br>数据库读写分离</p>
+<p>F5<br>↓<br>nginx<br>↓<br>open feign<br>↓  sentinel和mq 限流<br>服务<br>预热：把商品放入redis<br>库存：lua脚本操作<br>放重：setnx token或IP同一时间一个有效<br>分布式锁：请求原子性<br>↓<br>数据库读写分离</p>
 <h2 id="订单超时自动取消"><a href="#订单超时自动取消" class="headerlink" title="订单超时自动取消"></a>订单超时自动取消</h2><p>JDK自带延迟队列 DelayQueue 简单 不适合分布式<br>MQ延时消费 MQ接到消息会在指定时间通知消费端去处理 支持分布式 24小时内<br>redis过期监听 不可靠<br>定时任务分布式批处理 批量捞取</p>
 <h2 id="防重复下单"><a href="#防重复下单" class="headerlink" title="防重复下单"></a>防重复下单</h2><p>网页按钮置灰<br>redis setnx 过期3-5s 用户token+商品URL+key（下单）</p>
 <h2 id="防刷单"><a href="#防刷单" class="headerlink" title="防刷单"></a>防刷单</h2><p>用风控<br>提高门槛：实名认证，消费门槛<br>限制用户参与、中奖次数<br>根据用户历史行为，提供不同的优惠<br>限流，自动扩容伸缩<br>黑名单<br>大数据用户画像</p>
