@@ -14,6 +14,21 @@
 <li>如果是链表长度大于8会转红黑树，但数组长度小于64会优先扩容</li>
 <li>当前存储数量+1，判断是否需要扩容</li>
 </ol>
+<h2 id="NIO"><a href="#NIO" class="headerlink" title="NIO"></a>NIO</h2><p>buffer channel seletor<br>client $\rightarrow$ buffer $\rightarrow$ channel $\rightarrow$ seletor $\rightarrow$ thread $\rightarrow$ server<br>channel类似于流，每个channel对应一个buffer缓冲区，channel注册到seletor<br>seletor会根据channel上发生的读写事件，将请求交由某个空闲的线程处理，seletor对应一个或多个线程<br>buffer和channel都是可读可写的</p>
+<h1 id="Java多线程"><a href="#Java多线程" class="headerlink" title="Java多线程"></a><em>Java多线程</em></h1><h2 id="ThreadPoolExecutor参数"><a href="#ThreadPoolExecutor参数" class="headerlink" title="ThreadPoolExecutor参数"></a>ThreadPoolExecutor参数</h2><p>int corePoolSize 核心线程池大小<br>int maximumPoolSize 最大线程池大小<br>long keepAliveTime 超时了没有调用就释放线程<br>TimeUnit unit 超时单位<br>BlockingQueue<Runnable> workQueue 阻塞队列<br>ThreadFactory threadFactory 线程工厂，创建线程<br>RejectedExecutionHandler handle 拒绝策略<br>4个拒绝策略  </p>
+<ol>
+<li>AbortPolicy：队列满了，丢弃任务，抛异常  </li>
+<li>CallerRunsPolicy：哪来的，去哪，提交任务的线程执行  </li>
+<li>DiscardPolicy：队列满了，丢掉，不抛异常  </li>
+<li>DiscardOldestPolicy：队列满了，尝试去和最早的竞争，丢弃队列最前面的任务，提交拒绝的任务</li>
+</ol>
+<h2 id="死锁条件"><a href="#死锁条件" class="headerlink" title="死锁条件"></a>死锁条件</h2><ol>
+<li>互斥条件  不用互斥锁，用AtomicInteger、CAS</li>
+<li>请求与保持条件 同步获取需要操作的资源，其他线程等待</li>
+<li>不剥夺条件 设置超时时间</li>
+<li>循环等待条件 有序的获资源</li>
+</ol>
+<h2 id="synchronized锁升级"><a href="#synchronized锁升级" class="headerlink" title="synchronized锁升级"></a>synchronized锁升级</h2><p>无锁<br>偏向锁：有线程访问时，对象头中的线程id设置为当前id<br>轻量级锁：当多个线程访问时，转成轻量级锁，使用CAS竞争锁<br>重量级锁：超过10次自旋</p>
 <h2 id="synchronized和ReentrantLock区别"><a href="#synchronized和ReentrantLock区别" class="headerlink" title="synchronized和ReentrantLock区别"></a>synchronized和ReentrantLock区别</h2><table>
 <thead>
 <tr>
@@ -28,16 +43,65 @@
 </tbody></table>
 <p>都可重入</p>
 <h2 id="AQS原理"><a href="#AQS原理" class="headerlink" title="AQS原理"></a>AQS原理</h2><p>通过一个共享资源状态state和FIFO队列来实现线程的排队、阻塞、唤醒<br>独占模式：同一时间只能有一个线程持有<br>共享模式：允许多个线程共享资源</p>
-<h1 id="Java多线程"><a href="#Java多线程" class="headerlink" title="Java多线程"></a><em>Java多线程</em></h1><h2 id="ThreadPoolExecutor参数"><a href="#ThreadPoolExecutor参数" class="headerlink" title="ThreadPoolExecutor参数"></a>ThreadPoolExecutor参数</h2><p>int corePoolSize 核心线程池大小<br>int maximumPoolSize 最大线程池大小<br>long keepAliveTime 超时了没有调用就释放线程<br>TimeUnit unit 超时单位<br>BlockingQueue<Runnable> workQueue 阻塞队列<br>ThreadFactory threadFactory 线程工厂，创建线程<br>RejectedExecutionHandler handle 拒绝策略<br>4个拒绝策略<br>AbortPolicy：队列满了，丢弃任务，抛异常<br>CallerRunsPolicy：哪来的，去哪，提交任务的线程执行<br>DiscardPolicy：队列满了，丢掉，不抛异常<br>DiscardOldestPolicy：队列满了，尝试去和最早的竞争，丢弃队列最前面的任务，提交拒绝的任务</p>
-<h2 id="死锁条件"><a href="#死锁条件" class="headerlink" title="死锁条件"></a>死锁条件</h2><ol>
-<li>互斥条件</li>
-<li>请求与保持条件</li>
-<li>不剥夺条件</li>
-<li>循环等待条件</li>
+<h2 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h2><p>递减 多少个线程完成后，执行下一步操作<br>countDown() 数量-1<br>await() 等待计数器归零，向下执行</p>
+<h2 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h2><p>递增 等待多个线程就绪后，执行下一步操作<br>初始化，给与达到条件的数量和达到条件后的执行操作<br>await：等待线程达到数量后，往下执行  </p>
+<h2 id="Semaphore"><a href="#Semaphore" class="headerlink" title="Semaphore"></a>Semaphore</h2><p>控制能够获得资源的线程数量<br>acquire() 获得，假如已经满了，等待被释放<br>release() 释放，会将当前的信号量释放+1，然后唤醒等待的线程<br>作用：多个共享资源互斥的使用，并发限流，控制最大的线程数</p>
+<h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><p>Java虚拟机提供轻量级的同步机制  </p>
+<ol>
+<li>保证可见性</li>
+<li>不保证原子性，不用lock、synchronized 使用Atomic</li>
+<li>禁止指令重排 编译器优化、指令并行、内存系统重排</li>
 </ol>
-<h2 id="synchronized锁升级"><a href="#synchronized锁升级" class="headerlink" title="synchronized锁升级"></a>synchronized锁升级</h2><p>无锁<br>偏向锁：有线程访问时，对象头中的线程id设置为当前id<br>轻量级锁：当多个线程访问时，转成轻量级锁，使用CAS竞争锁<br>重量级锁：超过10次自旋</p>
+<h2 id="CAS"><a href="#CAS" class="headerlink" title="CAS"></a>CAS</h2><p>比较当前工作内存中的值，如果这个值是期望的，那么则执行操作，如果不是就一直循环<br>缺点：</p>
+<ol>
+<li>循环会耗时</li>
+<li>一次只能保证一个共享变量的原子性</li>
+<li>ABA问题，增加版本号</li>
+</ol>
+<h2 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h2><p>NEW、RUNNABLE、BLOCKED、WATING、TIMED_WATING、TERMINATED</p>
+<h2 id="线程池状态"><a href="#线程池状态" class="headerlink" title="线程池状态"></a>线程池状态</h2><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>running</td>
+<td>运行，接收任务</td>
+</tr>
+<tr>
+<td>shutdown</td>
+<td>处于正在关闭，不接受任务，队列中的任务继续处理</td>
+</tr>
+<tr>
+<td>stop</td>
+<td>停止状态，不接受任务，不处理队列中的任务</td>
+</tr>
+<tr>
+<td>tidying</td>
+<td>没有线程运行</td>
+</tr>
+<tr>
+<td>terminated</td>
+<td>线程池关闭</td>
+</tr>
+</tbody></table>
 <h1 id="Jvm"><a href="#Jvm" class="headerlink" title="Jvm"></a><em>Jvm</em></h1><h2 id="类加载"><a href="#类加载" class="headerlink" title="类加载"></a>类加载</h2><p>加载-&gt;验证-&gt;准备-&gt;解析-&gt;初始化-&gt;使用-&gt;卸载<br>加载： 通过类的全限定名来获取类的二进制字节流，将这个字节流所代表的静态存储结构转化为元空间的运行时数据结构，再内存中生成一个代表这个类的Class对象，作为元空间这个类的各种数据的访问入口。<br>验证：确保Class文件的字节流中包含的信息符合当前虚拟机要求（文件格式验证、元数据验证、字节码验证、符号引用验证）<br>准备：正式为类变量分配内存并设置类变量初始值的阶段<br>解析：常量池内的符号引用替换成直接引用（类和接口的解析、字段解析、类方法解析、接口方法解析）<br>初始化：开始执行类中定义的Java程序代码</p>
-<h1 id="Spring"><a href="#Spring" class="headerlink" title="Spring"></a><em>Spring</em></h1><h2 id="Spring的事务什么情况下会失效"><a href="#Spring的事务什么情况下会失效" class="headerlink" title="Spring的事务什么情况下会失效"></a>Spring的事务什么情况下会失效</h2><ol>
+<h2 id="OOM定位"><a href="#OOM定位" class="headerlink" title="OOM定位"></a>OOM定位</h2><p>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath&#x3D;<br>导出文件 jmap -dump:format&#x3D;b,file&#x3D;dump.hprof 进程号</p>
+<h2 id="CPU高定位"><a href="#CPU高定位" class="headerlink" title="CPU高定位"></a>CPU高定位</h2><p>top 找到cpu高的进程号<br>top -H -p 进程号  找CPU高的线程号<br>printf ‘0x%x\n’ 线程号 转成16进制<br>jstack 进程号 | grep 16进制线程号 -A 20</p>
+<h1 id="Spring"><a href="#Spring" class="headerlink" title="Spring"></a><em>Spring</em></h1><h2 id="Spring-bean容器的生命周期"><a href="#Spring-bean容器的生命周期" class="headerlink" title="Spring bean容器的生命周期"></a>Spring bean容器的生命周期</h2><ol>
+<li>Spring容器根据配置中的bean定义实例化bean</li>
+<li>Spring使用依赖注入填充所有属性</li>
+<li>如果bean实现BeanNameAware接口，则工厂通过传递bean的id来调用setBeanName()</li>
+<li>如果bean实现BeanFactoryAware接口，工厂通过传递自身的实例来调用setBeanFactory()</li>
+<li>如果存在与bean关联的任何BeanPostProcessors，则调用preProcessAfterInitialization()方法</li>
+<li>如果为bean指定了init方法，则调用它</li>
+<li>如果存在与bean关联的任何BeanPostProcessors，则调用postProcessAfterInitialization()方法</li>
+<li>如果bean实现DisposableBean接口，当Spring容器关闭时，会调用destroy()</li>
+<li>如果为bean指定了destroy方法，则调用它</li>
+</ol>
+<h2 id="Spring的事务什么情况下会失效"><a href="#Spring的事务什么情况下会失效" class="headerlink" title="Spring的事务什么情况下会失效"></a>Spring的事务什么情况下会失效</h2><ol>
 <li>未捕获异常</li>
 <li>事务传播 属性设置不当</li>
 <li>多数据源事务管理</li>
@@ -68,7 +132,51 @@
 <td>支持基于依赖的注解</td>
 </tr>
 </tbody></table>
-<h1 id="Mysql"><a href="#Mysql" class="headerlink" title="Mysql"></a><em>Mysql</em></h1><h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先刷选主键id，再关联查询（需要索引）</p>
+<h2 id="SpringBoot自动配置"><a href="#SpringBoot自动配置" class="headerlink" title="SpringBoot自动配置"></a>SpringBoot自动配置</h2><p>SpringBoot所有自动配置都是在启动的时候扫描并加载，spring.factories所有的自动配置类都在这里面，但是不一定生效，要判断条件是否成立，<br>只要导入对应的starter，就有对应的启动器，有了启动器，我们自动配置就会生效，然后就配置成功。</p>
+<ol>
+<li>SpringBoot在启动的时候，从类路径下&#x2F;META-INF&#x2F;spring.factories获取指定值</li>
+<li>将这些自动配置的类导入容器，自动配置就会生效，帮我们进行自动配置</li>
+<li>整合javaEE，解决方案和自动配置都在spring-boot-autoconfigure-2.2.0.RELEASE.jar</li>
+<li>把所有导入的组件以类名方式返回，这些组件会添加到容器中</li>
+<li>容器中也会存在很多xxxAutoConfiguration的文件（@Bean），就是这些类给容器中导入这个场景需要的所有组件，并自动配置。</li>
+</ol>
+<h1 id="Mysql"><a href="#Mysql" class="headerlink" title="Mysql"></a><em>Mysql</em></h1><h2 id="隔离级别"><a href="#隔离级别" class="headerlink" title="隔离级别"></a>隔离级别</h2><table>
+<thead>
+<tr>
+<th>级别</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>READ UNCOMMITTED</td>
+<td>读未提交 存在脏读</td>
+</tr>
+<tr>
+<td>READ COMMITTED</td>
+<td>读已提交 不可重复的读，解决脏读</td>
+</tr>
+<tr>
+<td>REPEATABLE READ</td>
+<td>可重复读 存在幻读</td>
+</tr>
+<tr>
+<td>SERIALIZABLE</td>
+<td>串行化 解决幻读</td>
+</tr>
+</tbody></table>
+<p>幻读：当某个事物在读取某个范围内的记录时，另一个事务又在该范围内插入新的记录，当之前的事务再次读取该范围的记录时，会产生幻行。</p>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><p>整数：<br>TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT<br>INT(11) 不会限制值的合法范围，交互工具显示字符的个数  </p>
+<p>实数：<br>FLOAT、BOUBLE 浮点运算<br>DECINAL 精确计算</p>
+<p>字符串类型：<br>VARCHAR 可变长字符 使用1或2个（大于255字节）额外字节记录字符串的长度<br>CHAR  定长<br>BLOB 二进制数据 值太大时，使用外部存储区域来进行存储，此时每个值在行内需1-4个字节存储指针<br>TEXT 字符集和排序 </p>
+<p>日期和时间：<br>DATETIME 与时区无关，8个字节，存储范围大，1001-9999年<br>TIMESTAMP 有时区，4个字节，1970-2038年，默认NOT NULL</p>
+<h2 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a>哈希索引</h2><p>只包含哈希值和行指针，无法排序，只支持等值比较</p>
+<h2 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B+Tree"></a>B+Tree</h2><ol>
+<li>非叶子节点不存储数据，只存储索引，可以放更多的索引，树的高度比B树矮，磁盘IO少</li>
+<li>叶子节点包含所有索引字段</li>
+<li>叶子节点存储数据且用指针相互连接，范围查询更好</li>
+</ol>
+<h2 id="索引覆盖"><a href="#索引覆盖" class="headerlink" title="索引覆盖"></a>索引覆盖</h2><p>一个索引包含所有需要查询的字段的值</p>
+<h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先刷选主键id，再关联查询（需要索引）</p>
 <h2 id="InnoDb行锁"><a href="#InnoDb行锁" class="headerlink" title="InnoDb行锁"></a>InnoDb行锁</h2><ol>
 <li>记录锁（Record Lock）：单个行记录上的锁</li>
 <li>间隙锁（Gap Lock）：锁定一个范围，不包括记录本身</li>
@@ -77,6 +185,104 @@
 <h2 id="索引失效"><a href="#索引失效" class="headerlink" title="索引失效"></a>索引失效</h2><ol>
 <li>字符串字段发生隐式转换时</li>
 </ol>
+<h2 id="执行过程"><a href="#执行过程" class="headerlink" title="执行过程"></a>执行过程</h2><ol>
+<li>客户段发送一条查询给服务器</li>
+<li>服务器先检查查询缓存，如果命中了缓存，则立刻返回存储在缓存中的结果，否则进入下一阶段 </li>
+<li>服务器端通过解析器验证语法是否正确，通过预处理器验证表和字段是否存在，再由优化器生成对应的执行计划，从中选取最优的计划</li>
+<li>执行引擎根据优化器生成的执行计划，调用存储引擎的API执行查询</li>
+<li>将结果返回给客户端</li>
+</ol>
+<h2 id="优化器的提示"><a href="#优化器的提示" class="headerlink" title="优化器的提示"></a>优化器的提示</h2><table>
+<thead>
+<tr>
+<th>提示</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>STRAIGHT_JOIN</td>
+<td>按顺序执行表关联</td>
+</tr>
+<tr>
+<td>SQL_SMALL_RESULT</td>
+<td>将结果集放在内存中的索引临时表，避免排序操作</td>
+</tr>
+<tr>
+<td>SQL_BIG_RESULT</td>
+<td>使用磁盘临时表做排序操作</td>
+</tr>
+<tr>
+<td>SQL_BUFFER_RESULT</td>
+<td>告诉优化器将查询结果放到一个临时表，然后尽可能快地释放表锁</td>
+</tr>
+<tr>
+<td>SQL_CACHE</td>
+<td>结果集缓存在查询缓存中</td>
+</tr>
+<tr>
+<td>SQL_NO_CACHE</td>
+<td>结果集缓不存在查询缓存中</td>
+</tr>
+<tr>
+<td>FOR_UPDATE</td>
+<td>排他锁</td>
+</tr>
+<tr>
+<td>LOCK IN SHARE MODE</td>
+<td>共享锁</td>
+</tr>
+<tr>
+<td>USE INDEX</td>
+<td>使用索引</td>
+</tr>
+<tr>
+<td>FORCE INDEX</td>
+<td>告诉优化器全表扫描比索引成本高</td>
+</tr>
+<tr>
+<td>IGNORE INDEX</td>
+<td>不使用索引</td>
+</tr>
+</tbody></table>
+<h2 id="分页获取总数"><a href="#分页获取总数" class="headerlink" title="分页获取总数"></a>分页获取总数</h2><p>SQL_CALC_FOUND_ROWS 加此提示获取总数<br>FOUND_ROW() 查询</p>
+<h2 id="运行表和历史表返回一个"><a href="#运行表和历史表返回一个" class="headerlink" title="运行表和历史表返回一个"></a>运行表和历史表返回一个</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> GREATEST(<span class="variable">@found</span>:<span class="operator">=</span><span class="number">-1</span>,id) <span class="keyword">as</span> id,<span class="string">&#x27;user&#x27;</span> <span class="keyword">as</span> which_tbl</span><br><span class="line"><span class="keyword">FROM</span> users <span class="keyword">where</span> id <span class="operator">=</span> <span class="number">1</span></span><br><span class="line"><span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line"><span class="keyword">SELECT</span> id,<span class="string">&#x27;user_archived&#x27;</span></span><br><span class="line"><span class="keyword">FROM</span> user_archived <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span> <span class="keyword">AND</span> <span class="variable">@found</span> <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br><span class="line"><span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">1</span>,<span class="string">&#x27;reset&#x27;</span> <span class="keyword">FROM</span> DUAL <span class="keyword">WHERE</span> (<span class="variable">@found</span>:<span class="operator">=</span><span class="keyword">NULL</span>) <span class="keyword">IS</span> <span class="keyword">NOT NULL</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="视图算法"><a href="#视图算法" class="headerlink" title="视图算法"></a>视图算法</h2><p>合并算法：将视图SQL和查询SQL合并后，基于底层表查询<br>临时表算法：将视图数据放到临时表中，查询SQL查临时表</p>
+<h2 id="校对规则"><a href="#校对规则" class="headerlink" title="校对规则"></a>校对规则</h2><p>utf8_general_ci 大小写不敏感<br>utf8_general_cs 大小写敏感<br>utf8_bin 二进制 大小写敏感</p>
+<h2 id="主从复制"><a href="#主从复制" class="headerlink" title="主从复制"></a>主从复制</h2><p>基于行复制：可处理任何场景，没有记录语句，无法判断执行了什么SQL<br>基于语句复制：操作更灵活，存在无法复制的情况  </p>
+<p>复制步骤</p>
+<ol>
+<li>在主库上把数据更改记录在二进制日志中</li>
+<li>备库将主库的日志复制到自己的中继日志（Relay Log）中</li>
+<li>备库读取中继日志中的事件，将其重放到备库数据上</li>
+</ol>
+<h2 id="主要宕机原因"><a href="#主要宕机原因" class="headerlink" title="主要宕机原因"></a>主要宕机原因</h2><ol>
+<li>磁盘空间耗尽</li>
+<li>运行性能差的SQL</li>
+<li>糟糕的表设计、索引设计</li>
+<li>复制问题，主备不一致</li>
+</ol>
+<h2 id="符号分隔文件备份"><a href="#符号分隔文件备份" class="headerlink" title="符号分隔文件备份"></a>符号分隔文件备份</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">INTO</span> OUTFILE <span class="string">&#x27;/tmp/t1.txt&#x27;</span></span><br><span class="line">FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;,&#x27;</span> OPTIONALLY ENCLOSED <span class="keyword">BY</span> <span class="string">&#x27;&quot;&#x27;</span></span><br><span class="line">LINES TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;\n&#x27;</span></span><br><span class="line"><span class="keyword">FROM</span> test.t1;</span><br><span class="line"></span><br><span class="line">LOAD DATA INFILE <span class="string">&#x27;/tmp/t1.txt&#x27;</span></span><br><span class="line"><span class="keyword">INTO</span> <span class="keyword">TABLE</span> test.t1</span><br><span class="line">FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;,&#x27;</span> OPTIONALLY ENCLOSED <span class="keyword">BY</span> <span class="string">&#x27;&quot;&#x27;</span></span><br><span class="line">LINES TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;\n&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="查询状态"><a href="#查询状态" class="headerlink" title="查询状态"></a>查询状态</h2><p>Sleep：线程正在等待客户端发送新的请求<br>Query：线程正在执行查询或正在将结果发送给客户端<br>Locked：该线程正在等待表锁<br>Analyzing and statistics：线程正在收集存储引擎的统计信息，并生成查询的执行计划<br>Copying to tmp table：线程正在执行查询，并且将其结果都复制到一个临时表中，排序或union<br>sorting result：线程正在对结果进行排序<br>sending data：线程可能在多个状态之间传送数据，或者在生成结果集，或者在向客户端返回数据</p>
+<h2 id="执行计划"><a href="#执行计划" class="headerlink" title="执行计划"></a>执行计划</h2><p>id:标识SELECT所属行<br>select_type:对应简单还是复杂SELECT<br>table:对应访问的哪个表<br>type:访问类型</p>
+<ul>
+<li>ALL:全表扫描</li>
+<li>index:全表扫描，按索引排序扫</li>
+<li>range:有限制的索引扫描 BETWEEN,WHERE &gt;</li>
+<li>ref:索引访问，匹配单个值的所有行</li>
+<li>eq_ref:唯一索引</li>
+<li>const,system:查询优化成一个常量</li>
+<li>null:分解查询语句，执行阶段不访问索引或表</li>
+</ul>
+<p>possible_key:可以使用哪些索引<br>key:使用哪个索引<br>key_len:在索引里使用的字节数<br>ref:索引使用的哪个字段或常量<br>rows:估计读取行数<br>filtered:符合条件行数的悲观预估<br>extra:额外信息</p>
+<ul>
+<li>Using index:使用索引覆盖</li>
+<li>Using where:检索行后再进行过滤</li>
+<li>Using temporary:使用临时表</li>
+<li>Using filesort:使用外部索引排序</li>
+<li>Range checked for each record:没有好用的索引</li>
+</ul>
 <h1 id="Oracle"><a href="#Oracle" class="headerlink" title="Oracle"></a><em>Oracle</em></h1><h2 id="oracle多表关联"><a href="#oracle多表关联" class="headerlink" title="oracle多表关联"></a>oracle多表关联</h2><ol>
 <li>先过滤数据，再关联</li>
 <li>两个大表使用hash join， &#x2F;* +USE_HASH(a b) *&#x2F;</li>
@@ -84,14 +290,18 @@
 <li>如果有时间过滤条件，可以加时间分区</li>
 <li>如果表变化不大，使用物化视图，materialized</li>
 </ol>
-<h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a><em>Mybatis</em></h1><h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a><em>Redis</em></h1><h2 id="redis和数据库怎么保持数据一致性"><a href="#redis和数据库怎么保持数据一致性" class="headerlink" title="redis和数据库怎么保持数据一致性"></a>redis和数据库怎么保持数据一致性</h2><p>同一个事务中，先删除缓存，更新数据库，发送mq，mq消费端接收消息删除缓存。</p>
+<h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a><em>Mybatis</em></h1><h2 id="一级缓存和二级缓存"><a href="#一级缓存和二级缓存" class="headerlink" title="一级缓存和二级缓存"></a>一级缓存和二级缓存</h2><h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a><em>Redis</em></h1><h2 id="redis和数据库怎么保持数据一致性"><a href="#redis和数据库怎么保持数据一致性" class="headerlink" title="redis和数据库怎么保持数据一致性"></a>redis和数据库怎么保持数据一致性</h2><p>同一个事务中，先删除缓存，更新数据库，发送mq，mq消费端接收消息删除缓存。</p>
 <h2 id="redis节点key同步"><a href="#redis节点key同步" class="headerlink" title="redis节点key同步"></a>redis节点key同步</h2><p>主从、哨兵通过节点PSYNC协议异步复制主节点数据</p>
 <h2 id="redis复制过程"><a href="#redis复制过程" class="headerlink" title="redis复制过程"></a>redis复制过程</h2><p>redis从节点第一次复制，向主节点发送psync，主节点返回runid和offset，执行全量复制<br>后续执行增量复制，从之前主节点offset开始，如果主节点挂了，重新选举，需要重写全量复制。如果是网络问题，原来的runid主节点存活，则继续增量复制。</p>
 <h2 id="redis强一致性"><a href="#redis强一致性" class="headerlink" title="redis强一致性"></a>redis强一致性</h2><p>redisraft，多数节点确认后才能提交<br>使用腾讯的Tendis</p>
 <h2 id="redis哨兵"><a href="#redis哨兵" class="headerlink" title="redis哨兵"></a>redis哨兵</h2><p>监控：检查主从是否正常，哨兵是否在线<br>通知：服务器出现问题，通知其他节点<br>自动故障转移：断开主从连接，重新选取master，并通知各节点<br>哨兵本身不提供数据服务，数量为单数</p>
 <h2 id="哨兵选主过程"><a href="#哨兵选主过程" class="headerlink" title="哨兵选主过程"></a>哨兵选主过程</h2><p>单个哨兵认为主挂了，设置为SRI_S_DOWN，多个哨兵都认为主挂了，则设置为SRI_O_DOWN<br>哨兵竞选，各自有一票，谁先发信息过来，就把票给谁，过半胜。未决出则进行下一次，竞选次数+1。<br>选master，先排除离线的，选响应速度快的，与master最近联系过的，再根据优先级、offset、runid选</p>
+<h2 id="击穿雪崩穿透"><a href="#击穿雪崩穿透" class="headerlink" title="击穿雪崩穿透"></a>击穿雪崩穿透</h2><p>击穿<br>热点key突然失效<br>热点key永不过期<br>加锁排队，第一个访问数据库的加redis  </p>
+<p>雪崩<br>缓存集中过期<br>随机失效时间<br>redis高可用 哨兵模式</p>
+<p>穿透<br>数据库不存在数据<br>参数校验<br>布隆过滤器</p>
+<h2 id="redis过期键删除"><a href="#redis过期键删除" class="headerlink" title="redis过期键删除"></a>redis过期键删除</h2><p>惰性过期：访问时才判断是否过期，删除<br>定时过期：每个一段时间扫描一定数量的数据库expires字典中的key</p>
 <h1 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a><em>Kafka</em></h1><h2 id="依赖zookeeper"><a href="#依赖zookeeper" class="headerlink" title="依赖zookeeper"></a>依赖zookeeper</h2><p>kafka4.0才完全删除zk</p>
-<h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
+<h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a><em>RabbitMQ</em></h1><h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
 <h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序</p>
 <h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：组合字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
 <h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ol>
@@ -121,6 +331,48 @@
 <li>过期时间，使用Refresh Token，绑定设备信息和IP</li>
 <li>强制登出，重制密码</li>
 </ol>
+<h1 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a><em>设计模式</em></h1><h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>将对象的创建逻辑封装在一个工厂类中，而不是直接实例化，使得创建对象的过程与使用对象的过程分离<br>使用场景：</p>
+<ol>
+<li>日志记录：选择记录位置 本地、网络存储 </li>
+<li>数据库访问：切换数据库</li>
+<li>协议选择</li>
+</ol>
+<h2 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h2><p>一个类只有一个实例，并且提供访问这个对象的方式</p>
+<ol>
+<li>生成唯一ID</li>
+<li>计数器</li>
+</ol>
+<h2 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h2><p>通过引入一个代理对象来控制对原对象的访问，代理对象在客户端和目标对象之间充当中介，负责将客户端的请求转发给目标对象，同时在转发请求前后进行额外的处理。</p>
+<ol>
+<li>AOP</li>
+<li>火车票代售</li>
+</ol>
+<p>与适配器模式区别：适配器改变接口，代理不改变<br>与装饰器模式区别：装饰器用于增强功能，代理用于控制访问</p>
+<h2 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h2><p>充当两个不兼容接口之间的桥梁，通过适配器将一个类的接口转换成客户期望的另一个接口，使原本不能一起工作的类能够协同工作</p>
+<ol>
+<li>跨平台运行</li>
+<li>xml转json</li>
+</ol>
+<h2 id="装饰器模式"><a href="#装饰器模式" class="headerlink" title="装饰器模式"></a>装饰器模式</h2><p>向一个现有的对象添加新功能，同时不改变其结构</p>
+<h2 id="模板模式"><a href="#模板模式" class="headerlink" title="模板模式"></a>模板模式</h2><p>抽象类定义方法模板，子类按需重写方法实现，调用方式按抽象类定义执行</p>
+<h1 id="场景题"><a href="#场景题" class="headerlink" title="场景题"></a><em>场景题</em></h1><h2 id="设计秒杀"><a href="#设计秒杀" class="headerlink" title="设计秒杀"></a>设计秒杀</h2><p>静态资源放cdn  </p>
+<p>F5<br>$\downarrow$<br>nginx<br>$\downarrow$<br>open feign<br>$\downarrow$  sentinel和mq 限流<br>服务<br>预热：把商品放入redis<br>库存：lua脚本操作<br>放重：setnx token或IP同一时间一个有效<br>分布式锁：请求原子性<br>$\downarrow$<br>数据库读写分离</p>
+<h2 id="订单超时自动取消"><a href="#订单超时自动取消" class="headerlink" title="订单超时自动取消"></a>订单超时自动取消</h2><p>JDK自带延迟队列 DelayQueue 简单 不适合分布式<br>MQ延时消费 MQ接到消息会在指定时间通知消费端去处理 支持分布式 24小时内<br>redis过期监听 不可靠<br>定时任务分布式批处理 批量捞取</p>
+<h2 id="防重复下单"><a href="#防重复下单" class="headerlink" title="防重复下单"></a>防重复下单</h2><p>网页按钮置灰<br>redis setnx 过期3-5s 用户token+商品URL+key（下单）</p>
+<h2 id="防刷单"><a href="#防刷单" class="headerlink" title="防刷单"></a>防刷单</h2><p>用风控<br>提高门槛：实名认证，消费门槛<br>限制用户参与、中奖次数<br>根据用户历史行为，提供不同的优惠<br>限流，自动扩容伸缩<br>黑名单<br>大数据用户画像</p>
+<h2 id="扫码登录"><a href="#扫码登录" class="headerlink" title="扫码登录"></a>扫码登录</h2><ol>
+<li>生成QR：生成二维码ID，保存二维码ID状态到redis，设置过期时间，用轮询或长连接查询二维码状态</li>
+<li>扫码：APP扫码，校验用户token，变更二维码状态，绑定二维码ID和临时token</li>
+<li>确认登录：检验临时token，执行登录，生成PC token</li>
+</ol>
+<h2 id="redis-记录连续登录几天"><a href="#redis-记录连续登录几天" class="headerlink" title="redis 记录连续登录几天"></a>redis 记录连续登录几天</h2><p>redis bitmap<br>key：日期 位：用户ID<br>key：用户 位：日期</p>
+<h2 id="一亿个redis-key-统计共同好友"><a href="#一亿个redis-key-统计共同好友" class="headerlink" title="一亿个redis key 统计共同好友"></a>一亿个redis key 统计共同好友</h2><p>SINTERSTORE 取交集<br>Neo4j<br>Hbase+Hadoop</p>
+<h2 id="拆微服务"><a href="#拆微服务" class="headerlink" title="拆微服务"></a>拆微服务</h2><ol>
+<li>微服务之间不要有业务交叉  </li>
+<li>微服务之间用接口访问  </li>
+<li>高内聚 低耦合<br>DDD 面对软件复杂之道</li>
+</ol>
+<h2 id="MQ保证消息不丢失"><a href="#MQ保证消息不丢失" class="headerlink" title="MQ保证消息不丢失"></a>MQ保证消息不丢失</h2><p>生产者发送：发送+回调 事务消息 手动事务<br>主从同步：1.同步-收到消息立即同步到从节点 2.异步-收到消息先响应生产者，后同步从节点<br>写入磁盘：同步、异步刷盘<br>消费者消费：事务完成后，提交offset</p>
 </div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-04-14</span><i class="fa fa-tag"></i><a class="tag" href="/tags/spring/" title="spring">spring </a><a class="tag" href="/tags/java/" title="java">java </a><a class="tag" href="/tags/mysql/" title="mysql">mysql </a><a class="tag" href="/tags/oracle/" title="oracle">oracle </a><a class="tag" href="/tags/redis/" title="redis">redis </a><a class="tag" href="/tags/es/" title="es">es </a><a class="tag" href="/tags/zk/" title="zk">zk </a><a class="tag" href="/tags/kafka/" title="kafka">kafka </a><a class="tag" href="/tags/微服务/" title="微服务">微服务 </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a class="btn" role="navigation" href="/2024/07/15/%E6%B5%8B%E8%AF%95/" title="测试">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
   el:'#vcomments',
   notify:false || false, 
