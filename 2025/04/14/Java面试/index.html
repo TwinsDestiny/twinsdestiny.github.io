@@ -283,12 +283,12 @@
 </tr>
 </tbody></table>
 <p>幻读：当某个事物在读取某个范围内的记录时，另一个事务又在该范围内插入新的记录，当之前的事务再次读取该范围的记录时，会产生幻行。  </p>
-<h3 id="REPEATABLE-READ能否解决幻读？"><a href="#REPEATABLE-READ能否解决幻读？" class="headerlink" title="REPEATABLE READ能否解决幻读？"></a>REPEATABLE READ能否解决幻读？</h3><p>✅能解决“普通的幻读”  </p>
+<h3 id="REPEATABLE-READ能否解决幻读？"><a href="#REPEATABLE-READ能否解决幻读？" class="headerlink" title="REPEATABLE READ能否解决幻读？"></a>REPEATABLE READ能否解决幻读？</h3><p>能解决“普通的幻读”  </p>
 <ul>
 <li>查询（SELECT）使用一致性视图（ReadView），同一个事务内的所有查询，始终看到事务开始时的数据快照，因此 不会看到别的事务插入的新数据，避免了“普通的幻读”。  </li>
 <li>对于 SELECT … WHERE … 这类查询，REPEATABLE READ 级别能保证结果一致。</li>
 </ul>
-<p>❌不能解决“范围上的幻读”（范围修改）  </p>
+<p>不能解决“范围上的幻读”（范围修改）  </p>
 <ul>
 <li>如果事务 A 试图更新或删除符合条件的行，可能仍会受到其他事务插入数据的影响，导致数据不一致。</li>
 <li>因为 MVCC 只影响 SELECT，但 UPDATE&#x2F;DELETE 需要锁定数据行，而插入的新行可能不在锁范围内。</li>
@@ -494,7 +494,23 @@
 <li>如果表变化不大，使用物化视图，materialized</li>
 </ol>
 <h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a><em>Mybatis</em></h1><h2 id="查询性能优化"><a href="#查询性能优化" class="headerlink" title="查询性能优化"></a>查询性能优化</h2><p>SQL语句优化：避免SELECT *，优化WHERE条件，避免LIKE ‘%XX%’<br>MyBatis配置优化：开启二级缓存，使用resultMap，避免N+1查询（多个查询合并为关联查询或批量查询）<br>索引优化：创建合适的索引，遵循最左前缀原则<br>批量查询优化：使用JOIN，IN查询，MyBatis 批量查询<br>MySQL配置优化：开启SQL预编译，提高查询效率<br>Redis缓存：缓存热点数据，减少数据库查询压力  </p>
-<h2 id="一级缓存和二级缓存"><a href="#一级缓存和二级缓存" class="headerlink" title="一级缓存和二级缓存"></a>一级缓存和二级缓存</h2><h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a><em>Redis</em></h1><h2 id="redis和数据库怎么保持数据一致性"><a href="#redis和数据库怎么保持数据一致性" class="headerlink" title="redis和数据库怎么保持数据一致性"></a>redis和数据库怎么保持数据一致性</h2><p>同一个事务中，先删除缓存，更新数据库，发送mq，mq消费端接收消息删除缓存。</p>
+<h2 id="一级缓存和二级缓存"><a href="#一级缓存和二级缓存" class="headerlink" title="一级缓存和二级缓存"></a>一级缓存和二级缓存</h2><h3 id="一级缓存（本地缓存）"><a href="#一级缓存（本地缓存）" class="headerlink" title="一级缓存（本地缓存）"></a>一级缓存（本地缓存）</h3><p>在一个SqlSession生命周期内，如果执行相同的查询SQL（且参数相同），MyBatis会直接从缓存中取数据，而不是再次发起数据库查询。</p>
+<ul>
+<li>默认开启，不能关闭。</li>
+<li>作用范围：同一个 SqlSession</li>
+<li>缓存级别：本地缓存（LocalCache）</li>
+<li>生命周期短：随着 SqlSession 的关闭而销毁。</li>
+<li>若执行了 update&#x2F;insert&#x2F;delete 操作，会清空该缓存，防止脏读。</li>
+</ul>
+<h3 id="二级缓存（跨-SqlSession-缓存）"><a href="#二级缓存（跨-SqlSession-缓存）" class="headerlink" title="二级缓存（跨 SqlSession 缓存）"></a>二级缓存（跨 SqlSession 缓存）</h3><p>是Mapper级别的缓存，通过配置开启，可以在多个SqlSession间共享数据，提升系统整体查询性能。</p>
+<ul>
+<li>默认关闭，需要手动开启。</li>
+<li>缓存级别：Mapper映射级别（基于namespace）</li>
+<li>生命周期长：存在于整个Mapper生命周期内。</li>
+<li>底层是可插拔缓存实现（默认是PerpetualCache + LRU缓存策略）</li>
+<li>二级缓存是基于序列化存储的，对象需要实现Serializable接口</li>
+</ul>
+<h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a><em>Redis</em></h1><h2 id="redis和数据库怎么保持数据一致性"><a href="#redis和数据库怎么保持数据一致性" class="headerlink" title="redis和数据库怎么保持数据一致性"></a>redis和数据库怎么保持数据一致性</h2><p>同一个事务中，先删除缓存，更新数据库，发送mq，mq消费端接收消息删除缓存。</p>
 <h2 id="redis节点key同步"><a href="#redis节点key同步" class="headerlink" title="redis节点key同步"></a>redis节点key同步</h2><p>主从、哨兵通过节点PSYNC协议异步复制主节点数据</p>
 <h2 id="redis复制过程"><a href="#redis复制过程" class="headerlink" title="redis复制过程"></a>redis复制过程</h2><p>redis从节点第一次复制，向主节点发送psync，主节点返回runid和offset，执行全量复制<br>后续执行增量复制，从之前主节点offset开始，如果主节点挂了，重新选举，需要重写全量复制。如果是网络问题，原来的runid主节点存活，则继续增量复制。</p>
 <h2 id="redis强一致性"><a href="#redis强一致性" class="headerlink" title="redis强一致性"></a>redis强一致性</h2><p>redisraft，多数节点确认后才能提交<br>使用腾讯的Tendis</p>
@@ -521,13 +537,24 @@
 <h1 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a><em>Kafka</em></h1><h2 id="依赖zookeeper"><a href="#依赖zookeeper" class="headerlink" title="依赖zookeeper"></a>依赖zookeeper</h2><p>kafka4.0才完全删除zk</p>
 <h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a><em>RabbitMQ</em></h1><h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
 <h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序</p>
-<h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：组合字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
-<h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ol>
-<li>繁体转简体</li>
-<li>符号替换（，换空格）</li>
+<h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：嵌套字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
+<h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ul>
+<li>tsconvert 繁体转简体</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;tsconvert&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;convert_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;t2s&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;stconvert&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;tsconvert&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>char_filter（字符过滤器）<br>将 .、·、・、_、,、， 这些符号替换为空格（” “），但仅在前后均为非空白字符的情况下生效。</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;special_char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;pattern&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(?&lt;=[^\\s_.·・,，])[_.·・,，](?=[^\\s_.·・,，])&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;pattern_replace&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;replacement&quot;</span><span class="punctuation">:</span> <span class="string">&quot; &quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;special_char_filter&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
 <li>ik分词器</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;tokenizer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;ik_smart&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<ul>
 <li>转小写</li>
-</ol>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;filter&quot;</span><span class="punctuation">:</span> <span class="string">&quot;lowercase&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
 <h1 id="分布式"><a href="#分布式" class="headerlink" title="分布式"></a><em>分布式</em></h1><h2 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h2><ul>
 <li>XA协议：TM事务管理器，RM资源管理器，应用程序</li>
 <li>2PC： <ol>
@@ -558,7 +585,7 @@
 <li>高并发读、多线程安全集合（CopyOnWriteArrayList）：适用于读多写少的场景。</li>
 <li>数据库 MVCC：提高数据库事务的并发性能。</li>
 </ul>
-<h1 id="网路"><a href="#网路" class="headerlink" title="*网路"></a>*网路</h1><h1 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a><em>设计模式</em></h1><h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>将对象的创建逻辑封装在一个工厂类中，而不是直接实例化，使得创建对象的过程与使用对象的过程分离<br>使用场景：</p>
+<h1 id="网路"><a href="#网路" class="headerlink" title="网路"></a><em>网路</em></h1><h1 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a><em>设计模式</em></h1><h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>将对象的创建逻辑封装在一个工厂类中，而不是直接实例化，使得创建对象的过程与使用对象的过程分离<br>使用场景：</p>
 <ol>
 <li>日志记录：选择记录位置 本地、网络存储 </li>
 <li>数据库访问：切换数据库</li>
@@ -618,6 +645,7 @@
 <li>数据库更新和消息队列发送放入同一个事务，保证数据库变更后一定会有一个同步消息。</li>
 <li>消息队列消费后，再更新Redis，保证最终一致性。</li>
 </ol>
+<h2 id="小内存如何排序大数据"><a href="#小内存如何排序大数据" class="headerlink" title="小内存如何排序大数据"></a>小内存如何排序大数据</h2><p>分组查询数据，每一组单独排序后存入文件，同时读取各组文件，将每组文件的数据按顺序放入败者树中，每一个叶子节点对应一个文件，若该节点的数据胜出，则读取下一个数据，胜出的数据放入一个新文件，直到各组文件读取完毕。<br><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMEaAiTjk8FxVIBDkg4iQKGNf56Z1sAArOuMRvoq0FEVTIzAzBR6DIBAAMCAAN4AAM2BA.png" alt="败者树"></p>
 </div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-04-14</span><i class="fa fa-tag"></i><a class="tag" href="/tags/spring/" title="spring">spring </a><a class="tag" href="/tags/java/" title="java">java </a><a class="tag" href="/tags/mysql/" title="mysql">mysql </a><a class="tag" href="/tags/oracle/" title="oracle">oracle </a><a class="tag" href="/tags/redis/" title="redis">redis </a><a class="tag" href="/tags/es/" title="es">es </a><a class="tag" href="/tags/zk/" title="zk">zk </a><a class="tag" href="/tags/kafka/" title="kafka">kafka </a><a class="tag" href="/tags/微服务/" title="微服务">微服务 </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a class="btn" role="navigation" href="/2024/07/15/%E6%B5%8B%E8%AF%95/" title="测试">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
   el:'#vcomments',
   notify:false || false, 
