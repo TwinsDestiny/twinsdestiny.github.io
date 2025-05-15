@@ -324,9 +324,9 @@
 </ul>
 <p>Read View 规则<br>假设 Read View 的 trx_ids &#x3D; {10, 11, 12}：</p>
 <ol>
-<li>如果 DB_TRX_ID &lt; up_limit_id（事务已提交） ✅ 可见</li>
-<li>如果 DB_TRX_ID ∈ trx_ids（事务正在执行） ❌ 不可见</li>
-<li>如果 DB_TRX_ID &gt; low_limit_id（事务开始后才修改） ❌ 不可见</li>
+<li>如果 DB_TRX_ID &lt; up_limit_id（事务已提交）  可见</li>
+<li>如果 DB_TRX_ID ∈ trx_ids（事务正在执行）  不可见</li>
+<li>如果 DB_TRX_ID &gt; low_limit_id（事务开始后才修改）  不可见</li>
 </ol>
 <h3 id="MVCC-优势"><a href="#MVCC-优势" class="headerlink" title="MVCC 优势"></a>MVCC 优势</h3><ul>
 <li>避免加锁：MVCC 主要通过多版本管理数据，而非锁定数据，提升了查询效率。</li>
@@ -535,7 +535,74 @@
 </ul>
 <h2 id="redis过期键删除"><a href="#redis过期键删除" class="headerlink" title="redis过期键删除"></a>redis过期键删除</h2><p>惰性过期：访问时才判断是否过期，删除<br>定时过期：每个一段时间扫描一定数量的数据库expires字典中的key</p>
 <h1 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a><em>Kafka</em></h1><h2 id="依赖zookeeper"><a href="#依赖zookeeper" class="headerlink" title="依赖zookeeper"></a>依赖zookeeper</h2><p>kafka4.0才完全删除zk</p>
-<h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a><em>RabbitMQ</em></h1><h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
+<h2 id="Kafka如何保证消息不丢失"><a href="#Kafka如何保证消息不丢失" class="headerlink" title="Kafka如何保证消息不丢失"></a>Kafka如何保证消息不丢失</h2><p>生产者：设置重试次数retries &#x3D; 3<br>消费者：手动提交offset</p>
+<h2 id="Kafka不丢消息"><a href="#Kafka不丢消息" class="headerlink" title="Kafka不丢消息"></a>Kafka不丢消息</h2><p>acks &#x3D; all<br>副本数replication.factor &gt;&#x3D; 3<br>最少写入几个副本min.insync.replicas &gt; 1<br>replication.factor &#x3D; min.insync.replicas + 1</p>
+<h2 id="Kafka-如何保证消息不重复消费"><a href="#Kafka-如何保证消息不重复消费" class="headerlink" title="Kafka 如何保证消息不重复消费"></a>Kafka 如何保证消息不重复消费</h2><p>消费消息服务做幂等校验<br>拉取到消息即提交，会有消息丢失的风险，通过定时任务同步数据兜底</p>
+<h2 id="kafka消费端重试"><a href="#kafka消费端重试" class="headerlink" title="kafka消费端重试"></a>kafka消费端重试</h2><p>DEFAULT_MAX_FAILURES &#x3D; 10<br>间隔为0</p>
+<h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a><em>RabbitMQ</em></h1><h2 id="Exchange-Types-交换器类型"><a href="#Exchange-Types-交换器类型" class="headerlink" title="Exchange Types(交换器类型)"></a>Exchange Types(交换器类型)</h2><ol>
+<li>fanout：它会把所有发送到该Exchange的消息路由到所有与它绑定的Queue中。</li>
+<li>direct：它会把消息路由到那些Bindingkey与RoutingKey完全匹配的Queue中。</li>
+<li>topic：将消息路由到 BindingKey 和 RoutingKey 相匹配的队列中</li>
+<li>headers：不依赖于路由键的匹配规则来路由消息，而是根据发送的消息内容中的 headers 属性进行匹配。</li>
+</ol>
+<h2 id="死信队列"><a href="#死信队列" class="headerlink" title="死信队列"></a>死信队列</h2><p>DLX，全称为 Dead-Letter-Exchange<br>导致的死信的几种原因：</p>
+<ul>
+<li>消息被拒（Basic.Reject &#x2F;Basic.Nack) 且 requeue &#x3D; false。</li>
+<li>消息 TTL 过期。</li>
+<li>队列满了，无法再添加。</li>
+</ul>
+<h2 id="延迟队列"><a href="#延迟队列" class="headerlink" title="延迟队列"></a>延迟队列</h2><p>RabbitMQ 本身是没有延迟队列的，通过 RabbitMQ 本身队列的特性来实现，需要使用 RabbitMQ 的死信交换机（Exchange）和消息的存活时间 TTL（Time To Live）。</p>
+<h2 id="RabbitMQ高可用"><a href="#RabbitMQ高可用" class="headerlink" title="RabbitMQ高可用"></a>RabbitMQ高可用</h2><ul>
+<li>普通集群模式：你创建的 queue，只会放在一个 RabbitMQ 实例上，但是每个实例都同步 queue 的元数据。</li>
+<li>镜像集群模式：在镜像集群模式下，你创建的 queue，无论元数据还是 queue 里的消息都会存在于多个实例上，就是说，每个 RabbitMQ 节点都有这个 queue 的一个完整镜像，包含 queue 的全部数据的意思。</li>
+</ul>
+<h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk是什么"><a href="#zk是什么" class="headerlink" title="zk是什么"></a>zk是什么</h2><p>ZooKeeper 是一个开源的分布式协调服务，通常被用于实现诸如数据发布&#x2F;订阅、负载均衡、命名服务、分布式协调&#x2F;通知、集群管理、Master 选举、分布式锁和分布式队列等功能。</p>
+<h2 id="znode"><a href="#znode" class="headerlink" title="znode"></a>znode</h2><ul>
+<li>持久（PERSISTENT）节点：一旦创建就一直存在即使 ZooKeeper 集群宕机，直到将其删除。</li>
+<li>临时（EPHEMERAL）节点：临时节点的生命周期是与 客户端会话（session）绑定的，会话消失则节点消失。并且，临时节点只能做叶子节点，不能创建子节点。</li>
+<li>持久顺序（PERSISTENT_SEQUENTIAL）节点：除了具有持久（PERSISTENT）节点的特性之外，子节点的名称还具有顺序性。比如&#x2F;node1&#x2F;app0000000001、&#x2F;node1&#x2F;app0000000002。</li>
+<li>临时顺序（EPHEMERAL_SEQUENTIAL）节点：除了具备临时（EPHEMERAL）节点的特性之外，子节点的名称还具有顺序性</li>
+</ul>
+<h2 id="集群角色"><a href="#集群角色" class="headerlink" title="集群角色"></a>集群角色</h2><ul>
+<li>Leader：为客户端提供读和写的服务，负责投票的发起和决议，更新系统状态。</li>
+<li>Follower：为客户端提供读服务，如果是写服务则转发给 Leader。参与选举过程中的投票。</li>
+<li>Observer：为客户端提供读服务，如果是写服务则转发给 Leader。不参与选举过程中的投票，也不参与“过半写成功”策略。在不影响写性能的情况下提升集群的读性能。此角色于 ZooKeeper3.3 系列新增的角色。</li>
+</ul>
+<h2 id="ZAB协议"><a href="#ZAB协议" class="headerlink" title="ZAB协议"></a>ZAB协议</h2><p>ZAB（ZooKeeper Atomic Broadcast，原子广播） 协议是为分布式协调服务 ZooKeeper 专门设计的一种支持崩溃恢复的原子广播协议。</p>
+<ul>
+<li>崩溃恢复：当整个服务框架在启动过程中，或是当 Leader 服务器出现网络中断、崩溃退出与重启等异常情况时，ZAB 协议就会进入恢复模式并选举产生新的 Leader 服务器。当选举产生了新的 Leader 服务器，同时集群中已经有过半的机器与该 Leader 服务器完成了状态同步之后，ZAB 协议就会退出恢复模式。其中，所谓的状态同步是指数据同步，用来保证集群中存在过半的机器能够和 Leader 服务器的数据状态保持一致。</li>
+<li>消息广播：当集群中已经有过半的 Follower 服务器完成了和 Leader 服务器的状态同步，那么整个服务框架就可以进入消息广播模式了。 当一台同样遵守 ZAB 协议的服务器启动后加入到集群中时，如果此时集群中已经存在一个 Leader 服务器在负责进行消息广播，那么新加入的服务器就会自觉地进入数据恢复模式：找到 Leader 所在的服务器，并与其进行数据同步，然后一起参与到消息广播流程中去。</li>
+</ul>
+<h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
+<ol>
+<li>优先选择拥有最新数据的节点（epoch 和 zxid）</li>
+<li>若数据一样，优先选 myid 较大的服务器</li>
+</ol>
+<h3 id="选举阶段"><a href="#选举阶段" class="headerlink" title="选举阶段"></a>选举阶段</h3><ol>
+<li>初始状态<ul>
+<li>所有节点启动时都认为自己是 Leader（LOOKING 状态）</li>
+<li>每个节点会发出一条 选票，选自己为 Leader，附带自己的 epoch 和 zxid 信息（数据事务号）<blockquote>
+<p>选票内容：&lt;myid, epoch, zxid&gt;</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>互相发送选票<ul>
+<li>所有节点将自己的选票广播给集群中其他所有节点</li>
+<li>收到他人选票后，和自己的选票进行对比</li>
+</ul>
+</li>
+<li>投票规则<br>对于每台节点来说，会维护一个“当前投票选的 Leader 候选人”（可能是自己或别人），当它接收到其他投票后，会根据以下规则判断是否更新自己的投票人：<blockquote>
+<p>新选票的 (epoch, zxid) 更大，则更新自己的投票人<br>若 (epoch, zxid) 相同，选择 myid 更大的作为 Leader</p>
+</blockquote>
+</li>
+<li>达成多数票<br>  当某个候选人获得了超过半数节点的投票，选举成功：<ul>
+<li>被选中的节点状态变为 LEADING</li>
+<li>其他节点变为 FOLLOWING</li>
+<li>整个集群进入正常工作状态</li>
+</ul>
+</li>
+</ol>
 <h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序</p>
 <h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：嵌套字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
 <h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ul>
@@ -585,7 +652,20 @@
 <li>高并发读、多线程安全集合（CopyOnWriteArrayList）：适用于读多写少的场景。</li>
 <li>数据库 MVCC：提高数据库事务的并发性能。</li>
 </ul>
-<h1 id="网路"><a href="#网路" class="headerlink" title="网路"></a><em>网路</em></h1><h1 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a><em>设计模式</em></h1><h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>将对象的创建逻辑封装在一个工厂类中，而不是直接实例化，使得创建对象的过程与使用对象的过程分离<br>使用场景：</p>
+<h1 id="网路"><a href="#网路" class="headerlink" title="网路"></a><em>网路</em></h1><h2 id="TCP三次握手"><a href="#TCP三次握手" class="headerlink" title="TCP三次握手"></a>TCP三次握手</h2><ul>
+<li>第一次握手：客户端发送SYN请求，给服务端发送了一个序号</li>
+<li>第二次握手：服务端发送SYN和ACK请求，给客户端发送自己的序号和确认客户端的序号</li>
+<li>第三次握手：客户端发送ACK请求，确认服务端的序号</li>
+</ul>
+<p>三次握手确认双方发送和接受功能正常</p>
+<h2 id="TCP四次挥手"><a href="#TCP四次挥手" class="headerlink" title="TCP四次挥手"></a>TCP四次挥手</h2><ul>
+<li>第一次挥手：客户端发送FIN请求，告诉服务端要关闭连接</li>
+<li>第二次挥手：服务端收到客户端请求后，进入等待关闭状态</li>
+<li>第三次挥手：服务端发送FIN请求，告诉客户端没有请求要处理了，可以关闭连接</li>
+<li>第四次挥手：客户端确认服务端关闭，自己也关闭连接</li>
+</ul>
+<p>关闭期间服务端可能还有数据未发送完毕，不能合并ACK+FIN</p>
+<h1 id="设计模式"><a href="#设计模式" class="headerlink" title="设计模式"></a><em>设计模式</em></h1><h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>将对象的创建逻辑封装在一个工厂类中，而不是直接实例化，使得创建对象的过程与使用对象的过程分离<br>使用场景：</p>
 <ol>
 <li>日志记录：选择记录位置 本地、网络存储 </li>
 <li>数据库访问：切换数据库</li>
