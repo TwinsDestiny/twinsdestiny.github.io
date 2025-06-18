@@ -31,6 +31,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">META-INF/services/java.sql.Driver</span><br><span class="line">com.mysql.cj.jdbc.Driver</span><br></pre></td></tr></table></figure>
 <p>当JVM启动并加载这个驱动类jar时，SPI（Service Provider Interface）机制会自动把驱动类加载进来并注册<br>在Spring Boot中，driver-class-name 可以不写，因为Spring Boot会根据你配置的url自动推断驱动类名。这个推断过程依赖DatabaseDriver.fromJdbcUrl()方法</p>
 <h2 id="java是真泛型吗"><a href="#java是真泛型吗" class="headerlink" title="java是真泛型吗"></a>java是真泛型吗</h2><p>Java 泛型采用的是类型擦除机制，也就是说泛型信息只在编译期有效，运行时 JVM 并不知道泛型的实际类型<br>T被擦成了Object或父类</p>
+<h2 id="java-spi"><a href="#java-spi" class="headerlink" title="java spi"></a>java spi</h2><p>提供了一种服务发现机制，允许在程序外部动态指定具体实现。<br>通过URL工具类从jar包的&#x2F;META-INF&#x2F;services目录下面找到对应的文件，读取这个文件的名称找到对应的spi接口，通过InputStream流将文件里面的具体实现类的全类名读取出来，根据获取到的全类名，先判断跟spi接口是否为同一类型，如果是的，那么就通过反射的机制构造对应的实例对象，将构造出来的实例对象添加到Providers的列表中。</p>
 <h1 id="Java多线程"><a href="#Java多线程" class="headerlink" title="Java多线程"></a><em>Java多线程</em></h1><h2 id="ThreadPoolExecutor参数"><a href="#ThreadPoolExecutor参数" class="headerlink" title="ThreadPoolExecutor参数"></a>ThreadPoolExecutor参数</h2><p>int corePoolSize 核心线程池大小<br>int maximumPoolSize 最大线程池大小<br>long keepAliveTime 超时了没有调用就释放线程<br>TimeUnit unit 超时单位<br>BlockingQueue<Runnable> workQueue 阻塞队列<br>ThreadFactory threadFactory 线程工厂，创建线程<br>RejectedExecutionHandler handle 拒绝策略<br>4个拒绝策略  </p>
 <ol>
 <li>AbortPolicy：队列满了，丢弃任务，抛异常  </li>
@@ -603,7 +604,31 @@
 </ul>
 </li>
 </ol>
-<h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序</p>
+<h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序<br>倒排索引不可变</p>
+<h2 id="什么是ES分片"><a href="#什么是ES分片" class="headerlink" title="什么是ES分片"></a>什么是ES分片</h2><p>es中最小的工作单元，是一个lucene的index</p>
+<h2 id="lucene-index"><a href="#lucene-index" class="headerlink" title="lucene index"></a>lucene index</h2><p><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMGaFJNaXbUyTYCNuvTXzUN_mVC-qMAAkSuMRvmHJBGdxY1U6UPc44BAAMCAAN4AAM2BA.png" alt="lucene"></p>
+<ul>
+<li>在lucene中，单个倒排索引文件被称为segment。segment是自包含的，不可变更。多个segment汇总在一起，称为lucene的index，对应es中的分片</li>
+<li>当有新文档写入时，会生成新segment，查询时会同时查询所有segment，并且对结果汇总。lucene中有一个文件，用来记录所有segment信息，叫做commit point。</li>
+<li>删除的文档信息，保存在.del文件中</li>
+</ul>
+<h2 id="什么是Refresh"><a href="#什么是Refresh" class="headerlink" title="什么是Refresh"></a>什么是Refresh</h2><ul>
+<li>将index buffer写入segment的过程叫Refresh，refresh不执行fsync操作</li>
+<li>refresh频率：默认1秒</li>
+<li>index buffer被占满时会触发refresh，默认jvm的10%</li>
+</ul>
+<h2 id="什么是Transaction-Log"><a href="#什么是Transaction-Log" class="headerlink" title="什么是Transaction Log"></a>什么是Transaction Log</h2><ul>
+<li>segment写入磁盘的过程相对耗时，借助文件系统缓存，refresh时先将segment写入缓存以开放查询</li>
+<li>为了保证数据不会丢失，所以在index文档时，同时写入Transaction Log。每个分片有一个Transaction Log。</li>
+<li>在es refresh时，index buffer被清空，Transaction Log不会清空</li>
+</ul>
+<h2 id="什么是Flush"><a href="#什么是Flush" class="headerlink" title="什么是Flush"></a>什么是Flush</h2><ul>
+<li>调用refresh，index buffer清空并且refresh</li>
+<li>调用fsync，将缓存中的segment写入磁盘</li>
+<li>清空（删除）Transaction Log</li>
+<li>默认30分钟调用1次</li>
+<li>Transaction Log满，默认512MB</li>
+</ul>
 <h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：嵌套字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
 <h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ul>
 <li>tsconvert 繁体转简体</li>
