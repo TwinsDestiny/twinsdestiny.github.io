@@ -212,11 +212,13 @@
 <li>如果为bean指定了destroy方法，则调用它</li>
 </ol>
 <h2 id="Spring的事务什么情况下会失效"><a href="#Spring的事务什么情况下会失效" class="headerlink" title="Spring的事务什么情况下会失效"></a>Spring的事务什么情况下会失效</h2><ol>
-<li>未捕获异常</li>
+<li>异常被try catch</li>
 <li>事务传播 属性设置不当</li>
 <li>多数据源事务管理</li>
 <li>非public方法</li>
-<li>this调用</li>
+<li>同一个类，this调用</li>
+<li>非runtimeException</li>
+<li>多线程调用</li>
 </ol>
 <h2 id="BeanFactory和ApplicationContext"><a href="#BeanFactory和ApplicationContext" class="headerlink" title="BeanFactory和ApplicationContext"></a>BeanFactory和ApplicationContext</h2><table>
 <thead>
@@ -259,6 +261,8 @@
 <li>Redis缓存回滚 TransactionSynchronizationManager</li>
 </ul>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.transaction.support.TransactionSynchronization;</span><br><span class="line"><span class="keyword">import</span> org.springframework.transaction.support.TransactionSynchronizationManager;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">updateUser</span><span class="params">(Long userId, String newName)</span> &#123;</span><br><span class="line">    userRepository.updateNameById(userId, newName);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注册事务同步回调</span></span><br><span class="line">    TransactionSynchronizationManager.registerSynchronization(<span class="keyword">new</span> <span class="title class_">TransactionSynchronization</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCommit</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="comment">// 事务提交成功后才更新 Redis</span></span><br><span class="line">            redisTemplate.opsForValue().set(<span class="string">&quot;user:&quot;</span> + userId, newName);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCompletion</span><span class="params">(<span class="type">int</span> status)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (status == STATUS_ROLLED_BACK) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;事务回滚，Redis 不更新&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;模拟异常&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
 <h1 id="Mysql"><a href="#Mysql" class="headerlink" title="Mysql"></a><em>Mysql</em></h1><h2 id="隔离级别"><a href="#隔离级别" class="headerlink" title="隔离级别"></a>隔离级别</h2><table>
 <thead>
 <tr>
@@ -535,6 +539,7 @@
 <li>限流相同key的查询频率</li>
 </ul>
 <h2 id="redis过期键删除"><a href="#redis过期键删除" class="headerlink" title="redis过期键删除"></a>redis过期键删除</h2><p>惰性过期：访问时才判断是否过期，删除<br>定时过期：每个一段时间扫描一定数量的数据库expires字典中的key</p>
+<h2 id="redisson"><a href="#redisson" class="headerlink" title="redisson"></a>redisson</h2><p>分布式锁，是可重入锁<br>hash结构，使用lua脚本操作<br>锁会自动续期，间隔为锁的过期时间&#x2F;3，如默认30秒过期，则10秒续一次期  </p>
 <h1 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a><em>Kafka</em></h1><h2 id="依赖zookeeper"><a href="#依赖zookeeper" class="headerlink" title="依赖zookeeper"></a>依赖zookeeper</h2><p>kafka4.0才完全删除zk</p>
 <h2 id="Kafka如何保证消息不丢失"><a href="#Kafka如何保证消息不丢失" class="headerlink" title="Kafka如何保证消息不丢失"></a>Kafka如何保证消息不丢失</h2><p>生产者：设置重试次数retries &#x3D; 3<br>消费者：手动提交offset</p>
 <h2 id="Kafka不丢消息"><a href="#Kafka不丢消息" class="headerlink" title="Kafka不丢消息"></a>Kafka不丢消息</h2><p>acks &#x3D; all<br>副本数replication.factor &gt;&#x3D; 3<br>最少写入几个副本min.insync.replicas &gt; 1<br>replication.factor &#x3D; min.insync.replicas + 1</p>
