@@ -7,6 +7,7 @@
 <li>手动递归复制</li>
 </ol>
 <h2 id="HashMap原理"><a href="#HashMap原理" class="headerlink" title="HashMap原理"></a>HashMap原理</h2><p>底层使用数组+链表+红黑树<br>数组（Node&lt;K,V&gt;[] table）存储HashMap中的所有键值对，当哈希冲突发生时，多个元素会以链表的方式存储在同一个桶中，当链表长度超过8时，链表会转化为红黑树，提高查找效率。<br>当调用put时，通过key.hashCode()计算哈希值，通过(h^(h&gt;&gt;&gt;16))进行扰动，减少哈希冲突，计算索引位置：index&#x3D;(n-1)&amp;hash（n是数组长度）。<br>HashMap默认初始容量是16，负载因子默认是0.75。当元素个数超过容量<em>负载因子（默认16</em>0.75&#x3D;12）时，触发扩容，将容量翻倍（newCapacity&#x3D;oldCapacity*2），并重新计算hash存储位置。</p>
+<h2 id="ConcurrentHashMap实现"><a href="#ConcurrentHashMap实现" class="headerlink" title="ConcurrentHashMap实现"></a>ConcurrentHashMap实现</h2><p>jdk1.7 segment数组+HashEntry数组+链表 segment继承ReentrantLock，采用分段锁（默认16），每一把锁只锁一个segment<br>jdk1.8 node数组+链表+红黑树 初始化node使用cas，node值用volatile修饰，放数据使用cas+synchronized</p>
 <h2 id="ConcurrentHashMap的put过程"><a href="#ConcurrentHashMap的put过程" class="headerlink" title="ConcurrentHashMap的put过程"></a>ConcurrentHashMap的put过程</h2><ol>
 <li>延迟初始化table</li>
 <li>使用CAS插入，避免同一个槽位插入不同数据（槽位为null）</li>
@@ -198,8 +199,18 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-XX:+UseG1GC  # 使用 G1 垃圾回收器</span><br><span class="line">-XX:+PrintGCDetails  # 输出 GC 详细信息</span><br><span class="line">-XX:+HeapDumpOnOutOfMemoryError  # OOM 时生成堆转储文件</span><br></pre></td></tr></table></figure>
 
 <h2 id="类加载"><a href="#类加载" class="headerlink" title="类加载"></a>类加载</h2><p>加载-&gt;验证-&gt;准备-&gt;解析-&gt;初始化-&gt;使用-&gt;卸载<br>加载：通过类的全限定名来获取类的二进制字节流，将这个字节流所代表的静态存储结构转化为元空间的运行时数据结构，再内存中生成一个代表这个类的Class对象，作为元空间这个类的各种数据的访问入口。<br>验证：确保Class文件的字节流中包含的信息符合当前虚拟机要求（文件格式验证、元数据验证、字节码验证、符号引用验证）<br>准备：正式为类变量分配内存并设置类变量初始值的阶段<br>解析：常量池内的符号引用替换成直接引用（类和接口的解析、字段解析、类方法解析、接口方法解析）<br>初始化：开始执行类中定义的Java程序代码</p>
-<h2 id="OOM定位"><a href="#OOM定位" class="headerlink" title="OOM定位"></a>OOM定位</h2><p>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath&#x3D;<br>导出文件 jmap -dump:format&#x3D;b,file&#x3D;dump.hprof 进程号</p>
+<h2 id="OOM定位"><a href="#OOM定位" class="headerlink" title="OOM定位"></a>OOM定位</h2><p>top 找内存大的进程号<br>jmap -histo pid<br>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath&#x3D;<br>导出文件 jmap -dump:format&#x3D;b,file&#x3D;dump.hprof 进程号</p>
 <h2 id="CPU高定位"><a href="#CPU高定位" class="headerlink" title="CPU高定位"></a>CPU高定位</h2><p>top 找到cpu高的进程号<br>top -H -p 进程号  找CPU高的线程号<br>printf ‘0x%x\n’ 线程号 转成16进制<br>jstack 进程号 | grep 16进制线程号 -A 20</p>
+<h2 id="高并发系统jvm优化"><a href="#高并发系统jvm优化" class="headerlink" title="高并发系统jvm优化"></a>高并发系统jvm优化</h2><ol>
+<li>内存预估，4核8G服务器，300-400并发</li>
+<li>内存分配，8G内存服务器，jvm分配4g</li>
+<li>内存占用动态推算，1秒占用多少内存空间，多少时间新生代Eden占满触发minor gc</li>
+<li>新生代内存不足时，提高新生代内存比例，避免对象直接进入老年代。 </li>
+<li>系统中的@Service和@Controller的类尽快进入老年代，调低年龄进入老年代（-XX:MaxTenuringThreshold&#x3D;5）。</li>
+<li>大对象直接进入老年代（-XX:PretenureSizeThreshold&#x3D;1M）。</li>
+<li>指定合适的垃圾回收器。5.推算每隔几分钟Minor GC后有多少MB进入老年代，多少时间后触发Full GC，Full GC后内存整理。</li>
+<li>尽可能让对象在新生代分配和回收，给系统足够内存空间</li>
+</ol>
 <h1 id="Spring"><a href="#Spring" class="headerlink" title="Spring"></a><em>Spring</em></h1><h2 id="Spring-bean容器的生命周期"><a href="#Spring-bean容器的生命周期" class="headerlink" title="Spring bean容器的生命周期"></a>Spring bean容器的生命周期</h2><ol>
 <li>Spring容器根据配置中的bean定义实例化bean</li>
 <li>Spring使用依赖注入填充所有属性</li>
@@ -501,7 +512,7 @@
 <h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a><em>Mybatis</em></h1><h2 id="查询性能优化"><a href="#查询性能优化" class="headerlink" title="查询性能优化"></a>查询性能优化</h2><p>SQL语句优化：避免SELECT *，优化WHERE条件，避免LIKE ‘%XX%’<br>MyBatis配置优化：开启二级缓存，使用resultMap，避免N+1查询（多个查询合并为关联查询或批量查询）<br>索引优化：创建合适的索引，遵循最左前缀原则<br>批量查询优化：使用JOIN，IN查询，MyBatis 批量查询<br>MySQL配置优化：开启SQL预编译，提高查询效率<br>Redis缓存：缓存热点数据，减少数据库查询压力  </p>
 <h2 id="一级缓存和二级缓存"><a href="#一级缓存和二级缓存" class="headerlink" title="一级缓存和二级缓存"></a>一级缓存和二级缓存</h2><h3 id="一级缓存（本地缓存）"><a href="#一级缓存（本地缓存）" class="headerlink" title="一级缓存（本地缓存）"></a>一级缓存（本地缓存）</h3><p>在一个SqlSession生命周期内，如果执行相同的查询SQL（且参数相同），MyBatis会直接从缓存中取数据，而不是再次发起数据库查询。</p>
 <ul>
-<li>默认开启，不能关闭。</li>
+<li>默认开启，不能关闭，使用statement可每次查询自动清空缓存。</li>
 <li>作用范围：同一个 SqlSession</li>
 <li>缓存级别：本地缓存（LocalCache）</li>
 <li>生命周期短：随着 SqlSession 的关闭而销毁。</li>
@@ -548,7 +559,7 @@
 <h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a><em>RabbitMQ</em></h1><h2 id="Exchange-Types-交换器类型"><a href="#Exchange-Types-交换器类型" class="headerlink" title="Exchange Types(交换器类型)"></a>Exchange Types(交换器类型)</h2><ol>
 <li>fanout：它会把所有发送到该Exchange的消息路由到所有与它绑定的Queue中。</li>
 <li>direct：它会把消息路由到那些Bindingkey与RoutingKey完全匹配的Queue中。</li>
-<li>topic：将消息路由到 BindingKey 和 RoutingKey 相匹配的队列中</li>
+<li>topic：将消息路由到 BindingKey 和 RoutingKey 相匹配的队列中，通配符匹配</li>
 <li>headers：不依赖于路由键的匹配规则来路由消息，而是根据发送的消息内容中的 headers 属性进行匹配。</li>
 </ol>
 <h2 id="死信队列"><a href="#死信队列" class="headerlink" title="死信队列"></a>死信队列</h2><p>DLX，全称为 Dead-Letter-Exchange<br>导致的死信的几种原因：</p>
@@ -557,11 +568,26 @@
 <li>消息 TTL 过期。</li>
 <li>队列满了，无法再添加。</li>
 </ul>
-<h2 id="延迟队列"><a href="#延迟队列" class="headerlink" title="延迟队列"></a>延迟队列</h2><p>RabbitMQ 本身是没有延迟队列的，通过 RabbitMQ 本身队列的特性来实现，需要使用 RabbitMQ 的死信交换机（Exchange）和消息的存活时间 TTL（Time To Live）。</p>
+<h2 id="延迟队列"><a href="#延迟队列" class="headerlink" title="延迟队列"></a>延迟队列</h2><p>RabbitMQ 本身是没有延迟队列的，通过 RabbitMQ 本身队列的特性来实现，需要使用 RabbitMQ 的死信交换机（Exchange）和消息的存活时间 TTL（Time To Live）。<br>使用rabbitmq-delayed-message-exchange插件</p>
 <h2 id="RabbitMQ高可用"><a href="#RabbitMQ高可用" class="headerlink" title="RabbitMQ高可用"></a>RabbitMQ高可用</h2><ul>
 <li>普通集群模式：你创建的 queue，只会放在一个 RabbitMQ 实例上，但是每个实例都同步 queue 的元数据。</li>
 <li>镜像集群模式：在镜像集群模式下，你创建的 queue，无论元数据还是 queue 里的消息都会存在于多个实例上，就是说，每个 RabbitMQ 节点都有这个 queue 的一个完整镜像，包含 queue 的全部数据的意思。</li>
 </ul>
+<h2 id="RabbitMQ消息不丢失"><a href="#RabbitMQ消息不丢失" class="headerlink" title="RabbitMQ消息不丢失"></a>RabbitMQ消息不丢失</h2><ol>
+<li>生产者到交换机，confirm确认，判断ack是否为true，投递失败增加补偿措施</li>
+<li>交换机到队列，开启return返回模式，根据返回码判断是否投递成功</li>
+<li>队列数据不丢失，交换机、队列、消息持久化，集群高可用</li>
+<li>消费者消费消息，手动确认，增加重试次数，丢入死信队列</li>
+</ol>
+<h2 id="RabbitMQ保证幂等性"><a href="#RabbitMQ保证幂等性" class="headerlink" title="RabbitMQ保证幂等性"></a>RabbitMQ保证幂等性</h2><ul>
+<li>生成者发送消息，增加全局唯一id</li>
+<li>消费者消费时，使用redis setnx命令</li>
+</ul>
+<h2 id="百万消息堆积"><a href="#百万消息堆积" class="headerlink" title="百万消息堆积"></a>百万消息堆积</h2><ol>
+<li>提前预防，做好压测预估</li>
+<li>应急处理，临时增加消费者数量，先写入其他设备，现在生产者发送速度</li>
+<li>事后优化，增加消费速度</li>
+</ol>
 <h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk是什么"><a href="#zk是什么" class="headerlink" title="zk是什么"></a>zk是什么</h2><p>ZooKeeper 是一个开源的分布式协调服务，通常被用于实现诸如数据发布&#x2F;订阅、负载均衡、命名服务、分布式协调&#x2F;通知、集群管理、Master 选举、分布式锁和分布式队列等功能。</p>
 <h2 id="znode"><a href="#znode" class="headerlink" title="znode"></a>znode</h2><ul>
 <li>持久（PERSISTENT）节点：一旦创建就一直存在即使 ZooKeeper 集群宕机，直到将其删除。</li>
