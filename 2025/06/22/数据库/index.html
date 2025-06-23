@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="altina,twinsdestiny.gin@gmail.com"><title>数据库 · 未来日记</title><meta name="description" content="Mysql隔离级别
+
+
+级别
+描述
+
+
+
+READ UNCOMMITTED
+读未提交 存在脏读
+
+
+READ COMMITTED
+读已提交 不可重复的读，解决脏读
+
+
+REPEATABLE READ
+可重复读 存在幻读
+
+
+SERIALIZABLE
+串行化 解决幻读
+
+
+幻读：当某个事物在读取某个范"><meta name="keywords" content="Hexo,HTML,CSS,android,Linux"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><meta name="generator" content="Hexo 7.3.0"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">未来日记</a></h3><div class="description"><p>Nothing lasts forever.</p></div></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a target="_blank" rel="noopener" href="https://www.caicai.me"> CaiCai </a><span>&</span><a target="_blank" rel="noopener" href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/about">关于</a></li><li><a href="/archives">归档</a></li><!--li--><!--  if is_current('links')--><!--    a.current(href="/links")= __('Links')--><!--  else--><!--    a(href="/links")= __('Links')--></div><div class="information"><div class="back_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li></div><div class="avatar"><img src="/images/altina.jpg"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>数据库</a></h3></div><div class="post-content"><h1 id="Mysql"><a href="#Mysql" class="headerlink" title="Mysql"></a><em>Mysql</em></h1><h2 id="隔离级别"><a href="#隔离级别" class="headerlink" title="隔离级别"></a>隔离级别</h2><table>
+<thead>
+<tr>
+<th>级别</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>READ UNCOMMITTED</td>
+<td>读未提交 存在脏读</td>
+</tr>
+<tr>
+<td>READ COMMITTED</td>
+<td>读已提交 不可重复的读，解决脏读</td>
+</tr>
+<tr>
+<td>REPEATABLE READ</td>
+<td>可重复读 存在幻读</td>
+</tr>
+<tr>
+<td>SERIALIZABLE</td>
+<td>串行化 解决幻读</td>
+</tr>
+</tbody></table>
+<p>幻读：当某个事物在读取某个范围内的记录时，另一个事务又在该范围内插入新的记录，当之前的事务再次读取该范围的记录时，会产生幻行。  </p>
+<h3 id="REPEATABLE-READ能否解决幻读？"><a href="#REPEATABLE-READ能否解决幻读？" class="headerlink" title="REPEATABLE READ能否解决幻读？"></a>REPEATABLE READ能否解决幻读？</h3><p>能解决“普通的幻读”  </p>
+<ul>
+<li>查询（SELECT）使用一致性视图（ReadView），同一个事务内的所有查询，始终看到事务开始时的数据快照，因此 不会看到别的事务插入的新数据，避免了“普通的幻读”。  </li>
+<li>对于 SELECT … WHERE … 这类查询，REPEATABLE READ 级别能保证结果一致。</li>
+</ul>
+<p>不能解决“范围上的幻读”（范围修改）  </p>
+<ul>
+<li>如果事务 A 试图更新或删除符合条件的行，可能仍会受到其他事务插入数据的影响，导致数据不一致。</li>
+<li>因为 MVCC 只影响 SELECT，但 UPDATE&#x2F;DELETE 需要锁定数据行，而插入的新行可能不在锁范围内。</li>
+</ul>
+<p>示例：UPDATE可能导致幻读</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">START</span> TRANSACTION;</span><br><span class="line"><span class="keyword">UPDATE</span> employee <span class="keyword">SET</span> salary <span class="operator">=</span> salary <span class="operator">+</span> <span class="number">1000</span> <span class="keyword">WHERE</span> salary <span class="operator">&gt;</span> <span class="number">10000</span>;</span><br></pre></td></tr></table></figure>
+<p>如果事务B在事务A运行过程中插入Jack，那么事务A不会修改Jack的salary，造成数据不一致。</p>
+<h3 id="如何彻底解决幻读"><a href="#如何彻底解决幻读" class="headerlink" title="如何彻底解决幻读"></a>如何彻底解决幻读</h3><ul>
+<li>使用 SERIALIZABLE（可串行化）隔离级别</li>
+<li>使用 SELECT … FOR UPDATE（间隙锁，Next-Key Lock）</li>
+</ul>
+<h2 id="MVCC原理"><a href="#MVCC原理" class="headerlink" title="MVCC原理"></a>MVCC原理</h2><p>MVCC（Multi-Version Concurrency Control，多版本并发控制）是 MySQL InnoDB 存储引擎的一种并发控制机制，通过维护数据的多个版本来实现高效的事务并发控制，避免长时间锁定数据，提高数据库的性能。</p>
+<h3 id="核心组件"><a href="#核心组件" class="headerlink" title="核心组件"></a>核心组件</h3><p>隐藏列</p>
+<ul>
+<li>DB_TRX_ID（事务 ID）：记录最后一次修改该行的事务 ID。</li>
+<li>DB_ROLL_PTR（回滚指针）：指向 undo log 记录，用于回溯旧版本数据。</li>
+</ul>
+<p>undo log（回滚日志）</p>
+<ul>
+<li>存储旧版本的数据，用于 MVCC 读取历史数据。</li>
+</ul>
+<p>Read View（读视图）</p>
+<ul>
+<li>事务读取时生成的一致性快照，用于判断可见性。</li>
+</ul>
+<h3 id="MVCC-适用的隔离级别"><a href="#MVCC-适用的隔离级别" class="headerlink" title="MVCC 适用的隔离级别"></a>MVCC 适用的隔离级别</h3><p>MVCC适用于READ COMMITTED（读已提交）和REPEATABLE READ（可重复读）</p>
+<h3 id="Read-View（读视图）机制"><a href="#Read-View（读视图）机制" class="headerlink" title="Read View（读视图）机制"></a>Read View（读视图）机制</h3><p>在 MVCC 中，事务查询数据时会生成 Read View，用于判断哪些数据对当前事务可见。<br>Read View 的主要字段</p>
+<ul>
+<li>trx_ids：当前数据库中活跃事务的 ID 列表</li>
+<li>up_limit_id：当前最小的活跃事务 ID</li>
+<li>low_limit_id：创建 Read View 时，数据库已分配的最新事务 ID</li>
+<li>trx_id：当前事务的 ID</li>
+</ul>
+<p>Read View 规则<br>假设 Read View 的 trx_ids &#x3D; {10, 11, 12}：</p>
+<ol>
+<li>如果 DB_TRX_ID &lt; up_limit_id（事务已提交）  可见</li>
+<li>如果 DB_TRX_ID ∈ trx_ids（事务正在执行）  不可见</li>
+<li>如果 DB_TRX_ID &gt; low_limit_id（事务开始后才修改）  不可见</li>
+</ol>
+<h3 id="MVCC-优势"><a href="#MVCC-优势" class="headerlink" title="MVCC 优势"></a>MVCC 优势</h3><ul>
+<li>避免加锁：MVCC 主要通过多版本管理数据，而非锁定数据，提升了查询效率。</li>
+<li>提高并发性能：读取操作不需要等待写入事务完成，提高数据库吞吐量。</li>
+<li>可见性控制：事务读取的 Read View 确保数据一致性，不影响其他事务。</li>
+</ul>
+<h3 id="MVCC-存在的问题"><a href="#MVCC-存在的问题" class="headerlink" title="MVCC 存在的问题"></a>MVCC 存在的问题</h3><ul>
+<li>MVCC只支持READ COMMITTED和REPEATABLE READ，SERIALIZABLE仍然需要锁机制。</li>
+<li>Undo Log占用空间：长期未提交事务可能导致undo log过多，占用存储空间。</li>
+<li>删除和更新操作的开销：每次UPDATE&#x2F;DELETE操作都要记录undo log，影响性能。</li>
+</ul>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><h3 id="整数"><a href="#整数" class="headerlink" title="整数"></a>整数</h3><p>TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT<br>INT(11) 不会限制值的合法范围，交互工具显示字符的个数  </p>
+<h3 id="实数"><a href="#实数" class="headerlink" title="实数"></a>实数</h3><p>FLOAT、BOUBLE 浮点运算<br>DECINAL 精确计算</p>
+<h3 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h3><p>VARCHAR 可变长字符 使用1或2个（大于255字节）额外字节记录字符串的长度<br>CHAR  定长<br>BLOB 二进制数据 值太大时，使用外部存储区域来进行存储，此时每个值在行内需1-4个字节存储指针<br>TEXT 字符集和排序 </p>
+<h3 id="日期和时间"><a href="#日期和时间" class="headerlink" title="日期和时间"></a>日期和时间</h3><p>DATETIME 与时区无关，8个字节，存储范围大，1001-9999年<br>TIMESTAMP 有时区，4个字节，1970-2038年，默认NOT NULL</p>
+<h2 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a>哈希索引</h2><p>只包含哈希值和行指针，无法排序，只支持等值比较</p>
+<h2 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B+Tree"></a>B+Tree</h2><ol>
+<li>非叶子节点不存储数据，只存储索引，可以放更多的索引，树的高度比B树矮，磁盘IO少</li>
+<li>叶子节点包含所有索引字段</li>
+<li>叶子节点存储数据且用指针相互连接，范围查询更好</li>
+</ol>
+<h2 id="索引覆盖"><a href="#索引覆盖" class="headerlink" title="索引覆盖"></a>索引覆盖</h2><p>一个索引包含所有需要查询的字段的值</p>
+<h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先刷选主键id，再关联查询（需要索引）</p>
+<h2 id="InnoDb行锁"><a href="#InnoDb行锁" class="headerlink" title="InnoDb行锁"></a>InnoDb行锁</h2><ol>
+<li>记录锁（Record Lock）：单个行记录上的锁</li>
+<li>间隙锁（Gap Lock）：锁定一个范围，不包括记录本身</li>
+<li>临键锁（Next-key Lock）：记录锁+间隙锁，锁定一个范围，包括记录本身</li>
+</ol>
+<h2 id="索引失效"><a href="#索引失效" class="headerlink" title="索引失效"></a>索引失效</h2><ol>
+<li>使用了LIKE模糊查询的开头</li>
+<li>使用了OR操作符 OR操作符会导致两个条件分别使用不同的索引</li>
+<li>对索引列使用了函数</li>
+<li>使用NULL查询</li>
+<li>在查询中对索引列进行了类型转换 字符串字段发生隐式转换时</li>
+<li>使用了DISTINCT或GROUP BY时索引失效</li>
+<li>使用了ORDER BY排序不符合索引顺序</li>
+<li>表的数据量很小</li>
+</ol>
+<h2 id="执行过程"><a href="#执行过程" class="headerlink" title="执行过程"></a>执行过程</h2><ol>
+<li>客户段发送一条查询给服务器</li>
+<li>服务器先检查查询缓存，如果命中了缓存，则立刻返回存储在缓存中的结果，否则进入下一阶段</li>
+<li>服务器端通过解析器验证语法是否正确，通过预处理器验证表和字段是否存在，再由优化器生成对应的执行计划，从中选取最优的计划</li>
+<li>执行引擎根据优化器生成的执行计划，调用存储引擎的API执行查询</li>
+<li>将结果返回给客户端</li>
+</ol>
+<h2 id="优化器的提示"><a href="#优化器的提示" class="headerlink" title="优化器的提示"></a>优化器的提示</h2><table>
+<thead>
+<tr>
+<th>提示</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>STRAIGHT_JOIN</td>
+<td>按顺序执行表关联</td>
+</tr>
+<tr>
+<td>SQL_SMALL_RESULT</td>
+<td>将结果集放在内存中的索引临时表，避免排序操作</td>
+</tr>
+<tr>
+<td>SQL_BIG_RESULT</td>
+<td>使用磁盘临时表做排序操作</td>
+</tr>
+<tr>
+<td>SQL_BUFFER_RESULT</td>
+<td>告诉优化器将查询结果放到一个临时表，然后尽可能快地释放表锁</td>
+</tr>
+<tr>
+<td>SQL_CACHE</td>
+<td>结果集缓存在查询缓存中</td>
+</tr>
+<tr>
+<td>SQL_NO_CACHE</td>
+<td>结果集缓不存在查询缓存中</td>
+</tr>
+<tr>
+<td>FOR_UPDATE</td>
+<td>排他锁</td>
+</tr>
+<tr>
+<td>LOCK IN SHARE MODE</td>
+<td>共享锁</td>
+</tr>
+<tr>
+<td>USE INDEX</td>
+<td>使用索引</td>
+</tr>
+<tr>
+<td>FORCE INDEX</td>
+<td>告诉优化器全表扫描比索引成本高</td>
+</tr>
+<tr>
+<td>IGNORE INDEX</td>
+<td>不使用索引</td>
+</tr>
+</tbody></table>
+<h2 id="分页获取总数"><a href="#分页获取总数" class="headerlink" title="分页获取总数"></a>分页获取总数</h2><p>SQL_CALC_FOUND_ROWS 加此提示获取总数<br>FOUND_ROW() 查询</p>
+<h2 id="运行表和历史表返回一个"><a href="#运行表和历史表返回一个" class="headerlink" title="运行表和历史表返回一个"></a>运行表和历史表返回一个</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> GREATEST(<span class="variable">@found</span>:<span class="operator">=</span><span class="number">-1</span>,id) <span class="keyword">as</span> id,<span class="string">&#x27;user&#x27;</span> <span class="keyword">as</span> which_tbl</span><br><span class="line"><span class="keyword">FROM</span> users <span class="keyword">where</span> id <span class="operator">=</span> <span class="number">1</span></span><br><span class="line"><span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line"><span class="keyword">SELECT</span> id,<span class="string">&#x27;user_archived&#x27;</span></span><br><span class="line"><span class="keyword">FROM</span> user_archived <span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="number">1</span> <span class="keyword">AND</span> <span class="variable">@found</span> <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br><span class="line"><span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">1</span>,<span class="string">&#x27;reset&#x27;</span> <span class="keyword">FROM</span> DUAL <span class="keyword">WHERE</span> (<span class="variable">@found</span>:<span class="operator">=</span><span class="keyword">NULL</span>) <span class="keyword">IS</span> <span class="keyword">NOT NULL</span></span><br></pre></td></tr></table></figure>
+<ol>
+<li>第一句sql，如果找到了记录，就会执行 @found :&#x3D; -1  </li>
+<li>第二句sql，只有当 @found IS NULL 时才执行  </li>
+<li>第三句sql，这条记录不会被真正返回执行， @found :&#x3D; NULL，重置变量</li>
+</ol>
+<h2 id="视图算法"><a href="#视图算法" class="headerlink" title="视图算法"></a>视图算法</h2><p>合并算法：将视图SQL和查询SQL合并后，基于底层表查询<br>临时表算法：将视图数据放到临时表中，查询SQL查临时表</p>
+<h2 id="校对规则"><a href="#校对规则" class="headerlink" title="校对规则"></a>校对规则</h2><p>utf8_general_ci 大小写不敏感<br>utf8_general_cs 大小写敏感<br>utf8_bin 二进制 大小写敏感</p>
+<h2 id="主从复制"><a href="#主从复制" class="headerlink" title="主从复制"></a>主从复制</h2><ul>
+<li>基于行复制：可处理任何场景，没有记录语句，无法判断执行了什么SQL  </li>
+<li>基于语句复制：操作更灵活，存在无法复制的情况</li>
+</ul>
+<p>复制步骤</p>
+<ol>
+<li>在主库上把数据更改记录在二进制日志中</li>
+<li>备库将主库的日志复制到自己的中继日志（Relay Log）中</li>
+<li>备库读取中继日志中的事件，将其重放到备库数据上</li>
+</ol>
+<h2 id="主要宕机原因"><a href="#主要宕机原因" class="headerlink" title="主要宕机原因"></a>主要宕机原因</h2><ol>
+<li>磁盘空间耗尽</li>
+<li>运行性能差的SQL</li>
+<li>糟糕的表设计、索引设计</li>
+<li>复制问题，主备不一致</li>
+</ol>
+<h2 id="符号分隔文件备份"><a href="#符号分隔文件备份" class="headerlink" title="符号分隔文件备份"></a>符号分隔文件备份</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">INTO</span> OUTFILE <span class="string">&#x27;/tmp/t1.txt&#x27;</span></span><br><span class="line">FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;,&#x27;</span> OPTIONALLY ENCLOSED <span class="keyword">BY</span> <span class="string">&#x27;&quot;&#x27;</span></span><br><span class="line">LINES TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;\n&#x27;</span></span><br><span class="line"><span class="keyword">FROM</span> test.t1;</span><br><span class="line"></span><br><span class="line">LOAD DATA INFILE <span class="string">&#x27;/tmp/t1.txt&#x27;</span></span><br><span class="line"><span class="keyword">INTO</span> <span class="keyword">TABLE</span> test.t1</span><br><span class="line">FIELDS TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;,&#x27;</span> OPTIONALLY ENCLOSED <span class="keyword">BY</span> <span class="string">&#x27;&quot;&#x27;</span></span><br><span class="line">LINES TERMINATED <span class="keyword">BY</span> <span class="string">&#x27;\n&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="查询状态"><a href="#查询状态" class="headerlink" title="查询状态"></a>查询状态</h2><p>Sleep：线程正在等待客户端发送新的请求<br>Query：线程正在执行查询或正在将结果发送给客户端<br>Locked：该线程正在等待表锁<br>Analyzing and statistics：线程正在收集存储引擎的统计信息，并生成查询的执行计划<br>Copying to tmp table：线程正在执行查询，并且将其结果都复制到一个临时表中，排序或union<br>sorting result：线程正在对结果进行排序<br>sending data：线程可能在多个状态之间传送数据，或者在生成结果集，或者在向客户端返回数据</p>
+<h2 id="执行计划"><a href="#执行计划" class="headerlink" title="执行计划"></a>执行计划</h2><p>id:标识SELECT所属行<br>select_type:对应简单还是复杂SELECT<br>table:对应访问的哪个表<br>type:访问类型</p>
+<ul>
+<li>ALL:全表扫描</li>
+<li>index:全表扫描，按索引排序扫</li>
+<li>range:有限制的索引扫描 BETWEEN,WHERE &gt;</li>
+<li>ref:索引访问，匹配单个值的所有行</li>
+<li>eq_ref:唯一索引</li>
+<li>const,system:查询优化成一个常量</li>
+<li>null:分解查询语句，执行阶段不访问索引或表</li>
+</ul>
+<p>possible_key:可以使用哪些索引<br>key:使用哪个索引<br>key_len:在索引里使用的字节数<br>ref:索引使用的哪个字段或常量<br>rows:估计读取行数<br>filtered:符合条件行数的悲观预估<br>extra:额外信息</p>
+<ul>
+<li>Using index:使用索引覆盖</li>
+<li>Using where:检索行后再进行过滤</li>
+<li>Using temporary:使用临时表</li>
+<li>Using filesort:使用外部索引排序</li>
+<li>Range checked for each record:没有好用的索引</li>
+</ul>
+<h2 id="mysql中为什么-like-‘-abc-’-没有走索引，’abc-’-就会走索引"><a href="#mysql中为什么-like-‘-abc-’-没有走索引，’abc-’-就会走索引" class="headerlink" title="mysql中为什么 like ‘%abc%’ 没有走索引，’abc%’ 就会走索引"></a>mysql中为什么 like ‘%abc%’ 没有走索引，’abc%’ 就会走索引</h2><p>MySQL索引（如 +树索引）通常是基于前缀匹配来优化查询的。这意味着，从索引的起始位置开始，索引可以高效地定位到符合条件的记录。<br>当查询模式为LIKE ‘abc%’ 时，’abc%’表示以abc开头的字符串，这时，MySQL可以利用前缀匹配来加速查询。  </p>
+<h2 id="sql执行怎么保证幂等"><a href="#sql执行怎么保证幂等" class="headerlink" title="sql执行怎么保证幂等"></a>sql执行怎么保证幂等</h2><ol>
+<li>唯一约束（最简单有效）</li>
+<li>插入前先判断是否存在（幂等逻辑判断）</li>
+<li>使用 INSERT IGNORE &#x2F; REPLACE INTO &#x2F; ON DUPLICATE KEY UPDATE<ul>
+<li>INSERT IGNORE：如果违反唯一索引，就忽略这条数据。</li>
+<li>REPLACE INTO：如果主键已存在，先删除再插入（⚠️不推荐，会产生副作用）。</li>
+<li>INSERT … ON DUPLICATE KEY UPDATE：如果唯一索引冲突就更新。</li>
+</ul>
+</li>
+<li>悲观锁 + 乐观锁控制更新幂等</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> orders</span><br><span class="line"><span class="keyword">SET</span> status <span class="operator">=</span> <span class="string">&#x27;PAID&#x27;</span>, version <span class="operator">=</span> version <span class="operator">+</span> <span class="number">1</span></span><br><span class="line"><span class="keyword">WHERE</span> order_id <span class="operator">=</span> <span class="string">&#x27;123456&#x27;</span> <span class="keyword">AND</span> version <span class="operator">=</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>幂等 Token &#x2F; 幂等 ID（配合接口设计）<br>比如接口请求带一个 request_id 或 token</li>
+</ol>
+<hr>
+<h1 id="Oracle"><a href="#Oracle" class="headerlink" title="Oracle"></a><em>Oracle</em></h1><h2 id="oracle多表关联"><a href="#oracle多表关联" class="headerlink" title="oracle多表关联"></a>oracle多表关联</h2><ol>
+<li>先过滤数据，再关联</li>
+<li>两个大表使用hash join， &#x2F;* +USE_HASH(a b) *&#x2F;</li>
+<li>关联字段，where字段，排序字段加索引</li>
+<li>如果有时间过滤条件，可以加时间分区</li>
+<li>如果表变化不大，使用物化视图，materialized</li>
+</ol>
+<hr>
+<h1 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a><em>Redis</em></h1><h2 id="redis和数据库怎么保持数据一致性"><a href="#redis和数据库怎么保持数据一致性" class="headerlink" title="redis和数据库怎么保持数据一致性"></a>redis和数据库怎么保持数据一致性</h2><p>同一个事务中，先删除缓存，更新数据库，发送mq，mq消费端接收消息删除缓存。</p>
+<h2 id="redis节点key同步"><a href="#redis节点key同步" class="headerlink" title="redis节点key同步"></a>redis节点key同步</h2><p>主从、哨兵通过节点PSYNC协议异步复制主节点数据</p>
+<h2 id="redis复制过程"><a href="#redis复制过程" class="headerlink" title="redis复制过程"></a>redis复制过程</h2><p>redis从节点第一次复制，向主节点发送psync，主节点返回runid和offset，执行全量复制<br>后续执行增量复制，从之前主节点offset开始，如果主节点挂了，重新选举，需要重写全量复制。如果是网络问题，原来的runid主节点存活，则继续增量复制。</p>
+<h2 id="redis强一致性"><a href="#redis强一致性" class="headerlink" title="redis强一致性"></a>redis强一致性</h2><p>redisraft，多数节点确认后才能提交<br>使用腾讯的Tendis</p>
+<h2 id="redis哨兵"><a href="#redis哨兵" class="headerlink" title="redis哨兵"></a>redis哨兵</h2><p>监控：检查主从是否正常，哨兵是否在线<br>通知：服务器出现问题，通知其他节点<br>自动故障转移：断开主从连接，重新选取master，并通知各节点<br>哨兵本身不提供数据服务，数量为单数  </p>
+<h2 id="哨兵选主过程"><a href="#哨兵选主过程" class="headerlink" title="哨兵选主过程"></a>哨兵选主过程</h2><p>单个哨兵认为主挂了，设置为SRI_S_DOWN，多个哨兵都认为主挂了，则设置为SRI_O_DOWN<br>哨兵竞选，各自有一票，谁先发信息过来，就把票给谁，过半胜。未决出则进行下一次，竞选次数+1。<br>选master，先排除离线的，选响应速度快的，与master最近联系过的，再根据优先级、offset、runid选</p>
+<h2 id="击穿雪崩穿透"><a href="#击穿雪崩穿透" class="headerlink" title="击穿雪崩穿透"></a>击穿雪崩穿透</h2><h3 id="缓存击穿"><a href="#缓存击穿" class="headerlink" title="缓存击穿"></a>缓存击穿</h3><p>热点key突然失效  </p>
+<ul>
+<li>热点key永不过期  </li>
+<li>加锁排队，第一个访问数据库的加redis</li>
+</ul>
+<h3 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h3><p>缓存集中过期  </p>
+<ul>
+<li>随机失效时间  </li>
+<li>redis高可用 哨兵模式</li>
+</ul>
+<h3 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h3><p>数据库不存在数据  </p>
+<ul>
+<li>缓存空值</li>
+<li>参数校验  </li>
+<li>布隆过滤器</li>
+<li>限流相同key的查询频率</li>
+</ul>
+<h2 id="redis过期键删除"><a href="#redis过期键删除" class="headerlink" title="redis过期键删除"></a>redis过期键删除</h2><p>惰性过期：访问时才判断是否过期，删除<br>定时过期：每个一段时间扫描一定数量的数据库expires字典中的key</p>
+<h2 id="redisson"><a href="#redisson" class="headerlink" title="redisson"></a>redisson</h2><p>分布式锁，是可重入锁<br>hash结构，使用lua脚本操作<br>锁会自动续期，间隔为锁的过期时间&#x2F;3，如默认30秒过期，则10秒续一次期  </p>
+<hr>
+<h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序<br>倒排索引不可变</p>
+<h2 id="什么是ES分片"><a href="#什么是ES分片" class="headerlink" title="什么是ES分片"></a>什么是ES分片</h2><p>es中最小的工作单元，是一个lucene的index</p>
+<h2 id="lucene-index"><a href="#lucene-index" class="headerlink" title="lucene index"></a>lucene index</h2><p><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMGaFJNaXbUyTYCNuvTXzUN_mVC-qMAAkSuMRvmHJBGdxY1U6UPc44BAAMCAAN4AAM2BA.png" alt="lucene"></p>
+<ul>
+<li>在lucene中，单个倒排索引文件被称为segment。segment是自包含的，不可变更。多个segment汇总在一起，称为lucene的index，对应es中的分片</li>
+<li>当有新文档写入时，会生成新segment，查询时会同时查询所有segment，并且对结果汇总。lucene中有一个文件，用来记录所有segment信息，叫做commit point。</li>
+<li>删除的文档信息，保存在.del文件中</li>
+</ul>
+<h2 id="什么是Refresh"><a href="#什么是Refresh" class="headerlink" title="什么是Refresh"></a>什么是Refresh</h2><ul>
+<li>将index buffer写入segment的过程叫Refresh，refresh不执行fsync操作</li>
+<li>refresh频率：默认1秒</li>
+<li>index buffer被占满时会触发refresh，默认jvm的10%</li>
+</ul>
+<h2 id="什么是Transaction-Log"><a href="#什么是Transaction-Log" class="headerlink" title="什么是Transaction Log"></a>什么是Transaction Log</h2><ul>
+<li>segment写入磁盘的过程相对耗时，借助文件系统缓存，refresh时先将segment写入缓存以开放查询</li>
+<li>为了保证数据不会丢失，所以在index文档时，同时写入Transaction Log。每个分片有一个Transaction Log。</li>
+<li>在es refresh时，index buffer被清空，Transaction Log不会清空</li>
+</ul>
+<h2 id="什么是Flush"><a href="#什么是Flush" class="headerlink" title="什么是Flush"></a>什么是Flush</h2><ul>
+<li>调用refresh，index buffer清空并且refresh</li>
+<li>调用fsync，将缓存中的segment写入磁盘</li>
+<li>清空（删除）Transaction Log</li>
+<li>默认30分钟调用1次</li>
+<li>Transaction Log满，默认512MB</li>
+</ul>
+<h2 id="字段"><a href="#字段" class="headerlink" title="字段"></a>字段</h2><p>keyword：精确匹配<br>text：模糊匹配<br>nested：嵌套字段<br>type&#x3D;text filed中keyword的type是keyword，即可精确又可模糊</p>
+<h2 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h2><ul>
+<li>tsconvert 繁体转简体</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;tsconvert&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;convert_type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;t2s&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;stconvert&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;tsconvert&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>char_filter（字符过滤器）<br>将 .、·、・、_、,、， 这些符号替换为空格（” “），但仅在前后均为非空白字符的情况下生效。</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;special_char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;pattern&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(?&lt;=[^\\s_.·・,，])[_.·・,，](?=[^\\s_.·・,，])&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;pattern_replace&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;replacement&quot;</span><span class="punctuation">:</span> <span class="string">&quot; &quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;char_filter&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;special_char_filter&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
+<li>ik分词器</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;tokenizer&quot;</span><span class="punctuation">:</span> <span class="string">&quot;ik_smart&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>转小写</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">&quot;analysis&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;analyzer&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;default&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;filter&quot;</span><span class="punctuation">:</span> <span class="string">&quot;lowercase&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-06-23</span><i class="fa fa-tag"></i><a class="tag" href="/tags/mysql/" title="mysql">mysql </a><a class="tag" href="/tags/oracle/" title="oracle">oracle </a><a class="tag" href="/tags/redis/" title="redis">redis </a><a class="tag" href="/tags/elasticsearch/" title="elasticsearch">elasticsearch </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E4%B8%AD%E9%97%B4%E4%BB%B6/" title="中间件">上一篇</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/Java%E6%A1%86%E6%9E%B6/" title="Java框架">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
+  el:'#vcomments',
+  notify:false || false, 
+  verify:false|| false, 
+  app_id:'9mYqMtl2iyjbXGL1QcUabAT9-MdYXbMMI',
+  app_key:'XlZzPkr84BOyGDb1joclACRF',
+  placeholder:'Just go go',
+  path: window.location.pathname,
+  avatar:''
+})
+</script></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

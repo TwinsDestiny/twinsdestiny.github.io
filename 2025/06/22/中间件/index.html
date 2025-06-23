@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="altina,twinsdestiny.gin@gmail.com"><title>中间件 · 未来日记</title><meta name="description" content="Kafka依赖zookeeperkafka4.0才完全删除zk
+Kafka如何保证消息不丢失生产者：设置重试次数retries &amp;#x3D; 3消费者：手动提交offset
+Kafka不丢消息acks &amp;#x3D; all副本数replication.factor &amp;gt;&amp;#x3D; 3最少写入几"><meta name="keywords" content="Hexo,HTML,CSS,android,Linux"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><meta name="generator" content="Hexo 7.3.0"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">未来日记</a></h3><div class="description"><p>Nothing lasts forever.</p></div></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a target="_blank" rel="noopener" href="https://www.caicai.me"> CaiCai </a><span>&</span><a target="_blank" rel="noopener" href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/about">关于</a></li><li><a href="/archives">归档</a></li><!--li--><!--  if is_current('links')--><!--    a.current(href="/links")= __('Links')--><!--  else--><!--    a(href="/links")= __('Links')--></div><div class="information"><div class="back_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li></div><div class="avatar"><img src="/images/altina.jpg"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>中间件</a></h3></div><div class="post-content"><h1 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a><em>Kafka</em></h1><h2 id="依赖zookeeper"><a href="#依赖zookeeper" class="headerlink" title="依赖zookeeper"></a>依赖zookeeper</h2><p>kafka4.0才完全删除zk</p>
+<h2 id="Kafka如何保证消息不丢失"><a href="#Kafka如何保证消息不丢失" class="headerlink" title="Kafka如何保证消息不丢失"></a>Kafka如何保证消息不丢失</h2><p>生产者：设置重试次数retries &#x3D; 3<br>消费者：手动提交offset</p>
+<h2 id="Kafka不丢消息"><a href="#Kafka不丢消息" class="headerlink" title="Kafka不丢消息"></a>Kafka不丢消息</h2><p>acks &#x3D; all<br>副本数replication.factor &gt;&#x3D; 3<br>最少写入几个副本min.insync.replicas &gt; 1<br>replication.factor &#x3D; min.insync.replicas + 1</p>
+<h2 id="Kafka-如何保证消息不重复消费"><a href="#Kafka-如何保证消息不重复消费" class="headerlink" title="Kafka 如何保证消息不重复消费"></a>Kafka 如何保证消息不重复消费</h2><p>消费消息服务做幂等校验<br>拉取到消息即提交，会有消息丢失的风险，通过定时任务同步数据兜底</p>
+<h2 id="kafka消费端重试"><a href="#kafka消费端重试" class="headerlink" title="kafka消费端重试"></a>kafka消费端重试</h2><p>DEFAULT_MAX_FAILURES &#x3D; 10<br>间隔为0</p>
+<hr>
+<h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a><em>RabbitMQ</em></h1><h2 id="Exchange-Types-交换器类型"><a href="#Exchange-Types-交换器类型" class="headerlink" title="Exchange Types(交换器类型)"></a>Exchange Types(交换器类型)</h2><ol>
+<li>fanout：它会把所有发送到该Exchange的消息路由到所有与它绑定的Queue中。</li>
+<li>direct：它会把消息路由到那些Bindingkey与RoutingKey完全匹配的Queue中。</li>
+<li>topic：将消息路由到 BindingKey 和 RoutingKey 相匹配的队列中，通配符匹配</li>
+<li>headers：不依赖于路由键的匹配规则来路由消息，而是根据发送的消息内容中的 headers 属性进行匹配。</li>
+</ol>
+<h2 id="死信队列"><a href="#死信队列" class="headerlink" title="死信队列"></a>死信队列</h2><p>DLX，全称为 Dead-Letter-Exchange<br>导致的死信的几种原因：</p>
+<ul>
+<li>消息被拒（Basic.Reject &#x2F;Basic.Nack) 且 requeue &#x3D; false。</li>
+<li>消息 TTL 过期。</li>
+<li>队列满了，无法再添加。</li>
+</ul>
+<h2 id="延迟队列"><a href="#延迟队列" class="headerlink" title="延迟队列"></a>延迟队列</h2><p>RabbitMQ 本身是没有延迟队列的，通过 RabbitMQ 本身队列的特性来实现，需要使用 RabbitMQ 的死信交换机（Exchange）和消息的存活时间 TTL（Time To Live）。<br>使用rabbitmq-delayed-message-exchange插件</p>
+<h2 id="RabbitMQ高可用"><a href="#RabbitMQ高可用" class="headerlink" title="RabbitMQ高可用"></a>RabbitMQ高可用</h2><ul>
+<li>普通集群模式：你创建的 queue，只会放在一个 RabbitMQ 实例上，但是每个实例都同步 queue 的元数据。</li>
+<li>镜像集群模式：在镜像集群模式下，你创建的 queue，无论元数据还是 queue 里的消息都会存在于多个实例上，就是说，每个 RabbitMQ 节点都有这个 queue 的一个完整镜像，包含 queue 的全部数据的意思。</li>
+</ul>
+<h2 id="RabbitMQ消息不丢失"><a href="#RabbitMQ消息不丢失" class="headerlink" title="RabbitMQ消息不丢失"></a>RabbitMQ消息不丢失</h2><ol>
+<li>生产者到交换机，confirm确认，判断ack是否为true，投递失败增加补偿措施</li>
+<li>交换机到队列，开启return返回模式，根据返回码判断是否投递成功</li>
+<li>队列数据不丢失，交换机、队列、消息持久化，集群高可用</li>
+<li>消费者消费消息，手动确认，增加重试次数，丢入死信队列</li>
+</ol>
+<h2 id="RabbitMQ保证幂等性"><a href="#RabbitMQ保证幂等性" class="headerlink" title="RabbitMQ保证幂等性"></a>RabbitMQ保证幂等性</h2><ul>
+<li>生成者发送消息，增加全局唯一id</li>
+<li>消费者消费时，使用redis setnx命令</li>
+</ul>
+<h2 id="百万消息堆积"><a href="#百万消息堆积" class="headerlink" title="百万消息堆积"></a>百万消息堆积</h2><ol>
+<li>提前预防，做好压测预估</li>
+<li>应急处理，临时增加消费者数量，先写入其他设备，现在生产者发送速度</li>
+<li>事后优化，增加消费速度</li>
+</ol>
+<hr>
+<h1 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a><em>Zookeeper</em></h1><h2 id="zk是什么"><a href="#zk是什么" class="headerlink" title="zk是什么"></a>zk是什么</h2><p>ZooKeeper 是一个开源的分布式协调服务，通常被用于实现诸如数据发布&#x2F;订阅、负载均衡、命名服务、分布式协调&#x2F;通知、集群管理、Master 选举、分布式锁和分布式队列等功能。</p>
+<h2 id="znode"><a href="#znode" class="headerlink" title="znode"></a>znode</h2><ul>
+<li>持久（PERSISTENT）节点：一旦创建就一直存在即使 ZooKeeper 集群宕机，直到将其删除。</li>
+<li>临时（EPHEMERAL）节点：临时节点的生命周期是与 客户端会话（session）绑定的，会话消失则节点消失。并且，临时节点只能做叶子节点，不能创建子节点。</li>
+<li>持久顺序（PERSISTENT_SEQUENTIAL）节点：除了具有持久（PERSISTENT）节点的特性之外，子节点的名称还具有顺序性。比如&#x2F;node1&#x2F;app0000000001、&#x2F;node1&#x2F;app0000000002。</li>
+<li>临时顺序（EPHEMERAL_SEQUENTIAL）节点：除了具备临时（EPHEMERAL）节点的特性之外，子节点的名称还具有顺序性</li>
+</ul>
+<h2 id="集群角色"><a href="#集群角色" class="headerlink" title="集群角色"></a>集群角色</h2><ul>
+<li>Leader：为客户端提供读和写的服务，负责投票的发起和决议，更新系统状态。</li>
+<li>Follower：为客户端提供读服务，如果是写服务则转发给 Leader。参与选举过程中的投票。</li>
+<li>Observer：为客户端提供读服务，如果是写服务则转发给 Leader。不参与选举过程中的投票，也不参与“过半写成功”策略。在不影响写性能的情况下提升集群的读性能。此角色于 ZooKeeper3.3 系列新增的角色。</li>
+</ul>
+<h2 id="ZAB协议"><a href="#ZAB协议" class="headerlink" title="ZAB协议"></a>ZAB协议</h2><p>ZAB（ZooKeeper Atomic Broadcast，原子广播） 协议是为分布式协调服务 ZooKeeper 专门设计的一种支持崩溃恢复的原子广播协议。</p>
+<ul>
+<li>崩溃恢复：当整个服务框架在启动过程中，或是当 Leader 服务器出现网络中断、崩溃退出与重启等异常情况时，ZAB 协议就会进入恢复模式并选举产生新的 Leader 服务器。当选举产生了新的 Leader 服务器，同时集群中已经有过半的机器与该 Leader 服务器完成了状态同步之后，ZAB 协议就会退出恢复模式。其中，所谓的状态同步是指数据同步，用来保证集群中存在过半的机器能够和 Leader 服务器的数据状态保持一致。</li>
+<li>消息广播：当集群中已经有过半的 Follower 服务器完成了和 Leader 服务器的状态同步，那么整个服务框架就可以进入消息广播模式了。 当一台同样遵守 ZAB 协议的服务器启动后加入到集群中时，如果此时集群中已经存在一个 Leader 服务器在负责进行消息广播，那么新加入的服务器就会自觉地进入数据恢复模式：找到 Leader 所在的服务器，并与其进行数据同步，然后一起参与到消息广播流程中去。</li>
+</ul>
+<h2 id="zk选举"><a href="#zk选举" class="headerlink" title="zk选举"></a>zk选举</h2><p>epoch大直接胜出，再比较zxid，再比较myid</p>
+<ol>
+<li>优先选择拥有最新数据的节点（epoch 和 zxid）</li>
+<li>若数据一样，优先选 myid 较大的服务器</li>
+</ol>
+<h3 id="选举阶段"><a href="#选举阶段" class="headerlink" title="选举阶段"></a>选举阶段</h3><ol>
+<li>初始状态<ul>
+<li>所有节点启动时都认为自己是 Leader（LOOKING 状态）</li>
+<li>每个节点会发出一条 选票，选自己为 Leader，附带自己的 epoch 和 zxid 信息（数据事务号）<blockquote>
+<p>选票内容：&lt;myid, epoch, zxid&gt;</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>互相发送选票<ul>
+<li>所有节点将自己的选票广播给集群中其他所有节点</li>
+<li>收到他人选票后，和自己的选票进行对比</li>
+</ul>
+</li>
+<li>投票规则<br>对于每台节点来说，会维护一个“当前投票选的 Leader 候选人”（可能是自己或别人），当它接收到其他投票后，会根据以下规则判断是否更新自己的投票人：<blockquote>
+<p>新选票的 (epoch, zxid) 更大，则更新自己的投票人<br>若 (epoch, zxid) 相同，选择 myid 更大的作为 Leader</p>
+</blockquote>
+</li>
+<li>达成多数票<br>  当某个候选人获得了超过半数节点的投票，选举成功：<ul>
+<li>被选中的节点状态变为 LEADING</li>
+<li>其他节点变为 FOLLOWING</li>
+<li>整个集群进入正常工作状态</li>
+</ul>
+</li>
+</ol>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-06-23</span><i class="fa fa-tag"></i><a class="tag" href="/tags/rabbitmq/" title="rabbitmq">rabbitmq </a><a class="tag" href="/tags/kafka/" title="kafka">kafka </a><a class="tag" href="/tags/zookeeper/" title="zookeeper">zookeeper </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统">上一篇</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
+  el:'#vcomments',
+  notify:false || false, 
+  verify:false|| false, 
+  app_id:'9mYqMtl2iyjbXGL1QcUabAT9-MdYXbMMI',
+  app_key:'XlZzPkr84BOyGDb1joclACRF',
+  placeholder:'Just go go',
+  path: window.location.pathname,
+  avatar:''
+})
+</script></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>

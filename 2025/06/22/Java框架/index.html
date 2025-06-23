@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><meta name="author" content="altina,twinsdestiny.gin@gmail.com"><title>Java框架 · 未来日记</title><meta name="description" content="SpringSpring bean容器的生命周期
+Spring容器根据配置中的bean定义实例化bean
+Spring使用依赖注入填充所有属性
+如果bean实现BeanNameAware接口，则工厂通过传递bean的id来调用setBeanName()
+如果bean实现BeanFactoryAwar"><meta name="keywords" content="Hexo,HTML,CSS,android,Linux"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="renderer" content="webkit"><link rel="short icon" href="/images/favicon.png" type="image/x-icon"><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/blog_basic.css"><link rel="stylesheet" href="/css/font-awesome.min.css"><link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml"><meta name="generator" content="Hexo 7.3.0"></head><body><div class="sidebar animated fadeInDown"><div class="logo-title"><div class="title"><img src="/images/logo@2x.png" style="width:127px;"><h3 title=""><a href="/">未来日记</a></h3><div class="description"><p>Nothing lasts forever.</p></div></div></div><ul class="social-links"></ul><div class="footer"><a target="_blank" href="/"><span>Theme by </span></a><a target="_blank" rel="noopener" href="https://www.caicai.me"> CaiCai </a><span>&</span><a target="_blank" rel="noopener" href="https://github.com/Ben02/hexo-theme-Anatole"> Ben</a><div class="by_farbox"><a href="https://hexo.io/zh-cn/" target="_blank">Proudly published with Hexo&#65281;</a></div></div></div><div class="main"><div class="page-top animated fadeInDown"><div class="nav"><li><a href="/">首页</a></li><li><a href="/about">关于</a></li><li><a href="/archives">归档</a></li><!--li--><!--  if is_current('links')--><!--    a.current(href="/links")= __('Links')--><!--  else--><!--    a(href="/links")= __('Links')--></div><div class="information"><div class="back_btn"><li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li></div><div class="avatar"><img src="/images/altina.jpg"></div></div></div><div class="autopagerize_page_element"><div class="content"><div class="post-page"><div class="post animated fadeInDown"><div class="post-title"><h3><a>Java框架</a></h3></div><div class="post-content"><h1 id="Spring"><a href="#Spring" class="headerlink" title="Spring"></a><em>Spring</em></h1><h2 id="Spring-bean容器的生命周期"><a href="#Spring-bean容器的生命周期" class="headerlink" title="Spring bean容器的生命周期"></a>Spring bean容器的生命周期</h2><ol>
+<li>Spring容器根据配置中的bean定义实例化bean</li>
+<li>Spring使用依赖注入填充所有属性</li>
+<li>如果bean实现BeanNameAware接口，则工厂通过传递bean的id来调用setBeanName()</li>
+<li>如果bean实现BeanFactoryAware接口，工厂通过传递自身的实例来调用setBeanFactory()</li>
+<li>如果存在与bean关联的任何BeanPostProcessors，则调用preProcessAfterInitialization()方法</li>
+<li>如果为bean指定了init方法，则调用它</li>
+<li>如果存在与bean关联的任何BeanPostProcessors，则调用postProcessAfterInitialization()方法</li>
+<li>如果bean实现DisposableBean接口，当Spring容器关闭时，会调用destroy()</li>
+<li>如果为bean指定了destroy方法，则调用它</li>
+</ol>
+<h2 id="Spring的事务什么情况下会失效"><a href="#Spring的事务什么情况下会失效" class="headerlink" title="Spring的事务什么情况下会失效"></a>Spring的事务什么情况下会失效</h2><ol>
+<li>异常被try catch</li>
+<li>事务传播 属性设置不当</li>
+<li>多数据源事务管理</li>
+<li>非public方法</li>
+<li>同一个类，this调用</li>
+<li>非runtimeException</li>
+<li>多线程调用</li>
+</ol>
+<h2 id="BeanFactory和ApplicationContext"><a href="#BeanFactory和ApplicationContext" class="headerlink" title="BeanFactory和ApplicationContext"></a>BeanFactory和ApplicationContext</h2><table>
+<thead>
+<tr>
+<th>BeanFactory</th>
+<th>ApplicationContext</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>使用懒加载</td>
+<td>使用即时加载</td>
+</tr>
+<tr>
+<td>它使用语法显示提供资源对象</td>
+<td>自动创建和管理资源对象</td>
+</tr>
+<tr>
+<td>不支持国际化</td>
+<td>支持国际化</td>
+</tr>
+<tr>
+<td>不支持基于依赖的注解</td>
+<td>支持基于依赖的注解</td>
+</tr>
+</tbody></table>
+<h2 id="SpringBoot自动配置"><a href="#SpringBoot自动配置" class="headerlink" title="SpringBoot自动配置"></a>SpringBoot自动配置</h2><p>SpringBoot所有自动配置都是在启动的时候扫描并加载，spring.factories所有的自动配置类都在这里面，但是不一定生效，要判断条件是否成立，<br>只要导入对应的starter，就有对应的启动器，有了启动器，我们自动配置就会生效，然后就配置成功。</p>
+<ol>
+<li>SpringBoot在启动的时候，从类路径下&#x2F;META-INF&#x2F;spring.factories获取指定值</li>
+<li>将这些自动配置的类导入容器，自动配置就会生效，帮我们进行自动配置</li>
+<li>整合javaEE，解决方案和自动配置都在spring-boot-autoconfigure-2.2.0.RELEASE.jar</li>
+<li>把所有导入的组件以类名方式返回，这些组件会添加到容器中</li>
+<li>容器中也会存在很多xxxAutoConfiguration的文件（@Bean），就是这些类给容器中导入这个场景需要的所有组件，并自动配置。</li>
+</ol>
+<h2 id="SpringBoot注解失效"><a href="#SpringBoot注解失效" class="headerlink" title="SpringBoot注解失效"></a>SpringBoot注解失效</h2><ul>
+<li>@ComponentScan 配置错误</li>
+<li>类没有被代理</li>
+</ul>
+<h2 id="spring事务回滚"><a href="#spring事务回滚" class="headerlink" title="spring事务回滚"></a>spring事务回滚</h2><ul>
+<li>数据库事务回滚 @Transactional</li>
+<li>Redis缓存回滚 TransactionSynchronizationManager</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.transaction.support.TransactionSynchronization;</span><br><span class="line"><span class="keyword">import</span> org.springframework.transaction.support.TransactionSynchronizationManager;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Transactional</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">updateUser</span><span class="params">(Long userId, String newName)</span> &#123;</span><br><span class="line">    userRepository.updateNameById(userId, newName);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注册事务同步回调</span></span><br><span class="line">    TransactionSynchronizationManager.registerSynchronization(<span class="keyword">new</span> <span class="title class_">TransactionSynchronization</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCommit</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="comment">// 事务提交成功后才更新 Redis</span></span><br><span class="line">            redisTemplate.opsForValue().set(<span class="string">&quot;user:&quot;</span> + userId, newName);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterCompletion</span><span class="params">(<span class="type">int</span> status)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (status == STATUS_ROLLED_BACK) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;事务回滚，Redis 不更新&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;模拟异常&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="Mybatis"><a href="#Mybatis" class="headerlink" title="Mybatis"></a><em>Mybatis</em></h1><h2 id="查询性能优化"><a href="#查询性能优化" class="headerlink" title="查询性能优化"></a>查询性能优化</h2><p>SQL语句优化：避免SELECT *，优化WHERE条件，避免LIKE ‘%XX%’<br>MyBatis配置优化：开启二级缓存，使用resultMap，避免N+1查询（多个查询合并为关联查询或批量查询）<br>索引优化：创建合适的索引，遵循最左前缀原则<br>批量查询优化：使用JOIN，IN查询，MyBatis 批量查询<br>MySQL配置优化：开启SQL预编译，提高查询效率<br>Redis缓存：缓存热点数据，减少数据库查询压力  </p>
+<h2 id="一级缓存和二级缓存"><a href="#一级缓存和二级缓存" class="headerlink" title="一级缓存和二级缓存"></a>一级缓存和二级缓存</h2><h3 id="一级缓存（本地缓存）"><a href="#一级缓存（本地缓存）" class="headerlink" title="一级缓存（本地缓存）"></a>一级缓存（本地缓存）</h3><p>在一个SqlSession生命周期内，如果执行相同的查询SQL（且参数相同），MyBatis会直接从缓存中取数据，而不是再次发起数据库查询。</p>
+<ul>
+<li>默认开启，不能关闭，使用statement可每次查询自动清空缓存。</li>
+<li>作用范围：同一个 SqlSession</li>
+<li>缓存级别：本地缓存（LocalCache）</li>
+<li>生命周期短：随着 SqlSession 的关闭而销毁。</li>
+<li>若执行了 update&#x2F;insert&#x2F;delete 操作，会清空该缓存，防止脏读。</li>
+</ul>
+<h3 id="二级缓存（跨-SqlSession-缓存）"><a href="#二级缓存（跨-SqlSession-缓存）" class="headerlink" title="二级缓存（跨 SqlSession 缓存）"></a>二级缓存（跨 SqlSession 缓存）</h3><p>是Mapper级别的缓存，通过配置开启，可以在多个SqlSession间共享数据，提升系统整体查询性能。</p>
+<ul>
+<li>默认关闭，需要手动开启。</li>
+<li>缓存级别：Mapper映射级别（基于namespace）</li>
+<li>生命周期长：存在于整个Mapper生命周期内。</li>
+<li>底层是可插拔缓存实现（默认是PerpetualCache + LRU缓存策略）</li>
+<li>二级缓存是基于序列化存储的，对象需要实现Serializable接口</li>
+</ul>
+<hr>
+<h1 id="分布式"><a href="#分布式" class="headerlink" title="分布式"></a><em>分布式</em></h1><h2 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h2><ul>
+<li>XA协议：TM事务管理器，RM资源管理器，应用程序</li>
+<li>2PC： <ol>
+<li>投票阶段：各参与者都执行SQL，但不提交事务，执行成功返回YES，否则返回NO  </li>
+<li>执行阶段：各参与者都返回YES，就执行commit，有一个NO就回滚事务<br>缺陷：1.同步阻塞 2.TM单点问题 3.数据不一致</li>
+</ol>
+</li>
+<li>3PC：增加先询问数据库是否执行事务，投票阶段增加超时机制，超时后默认提交</li>
+<li>TCC: Try,Confirm,Cancel。应用层实现，实际少有人用</li>
+</ul>
+<h2 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a>事务消息</h2><ol>
+<li>使用RocketMQ</li>
+<li>使用TransactionSynchronizationManager确认事务提交后执行afterCommit</li>
+</ol>
+<hr>
+<h1 id="微服务"><a href="#微服务" class="headerlink" title="微服务"></a><em>微服务</em></h1><h2 id="服务熔断、降级"><a href="#服务熔断、降级" class="headerlink" title="服务熔断、降级"></a>服务熔断、降级</h2><ul>
+<li>服务熔断：当服务A调用服务B时，如果服务B不可用，那么上游A为了保证自己不受影响，切断服务B，直到B服务恢复.  </li>
+<li>服务降级：当系统负载过高时，对非核心的业务进行关闭，保证核心业务正常运行。</li>
+</ul>
+<h2 id="接口幂等性"><a href="#接口幂等性" class="headerlink" title="接口幂等性"></a>接口幂等性</h2><ol>
+<li>使用唯一索引防止幂等性问题</li>
+<li>Token+Redis的幂等性  </li>
+<li>防重表实现幂等性（数据库分布式锁）</li>
+</ol>
+<hr>
+<h1 id="认证"><a href="#认证" class="headerlink" title="认证"></a><em>认证</em></h1><h2 id="accessToken防止窃取"><a href="#accessToken防止窃取" class="headerlink" title="accessToken防止窃取"></a>accessToken防止窃取</h2><ol>
+<li>使用https</li>
+<li>存放在cookie，使用http-only</li>
+<li>设置Content-Security-Policy头部限制脚本来源，使用Cookie时加上SameSite属性</li>
+<li>过期时间，使用Refresh Token，绑定设备信息和IP</li>
+<li>强制登出，重制密码</li>
+</ol>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-06-23</span><i class="fa fa-tag"></i><a class="tag" href="/tags/spring/" title="spring">spring </a><a class="tag" href="/tags/mybatis/" title="mybatis">mybatis </a><a class="tag" href="/tags/分布式/" title="分布式">分布式 </a><a class="tag" href="/tags/微服务/" title="微服务">微服务 </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E6%95%B0%E6%8D%AE%E5%BA%93/" title="数据库">上一篇</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/Java%E5%9F%BA%E7%A1%80/" title="Java基础">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
+  el:'#vcomments',
+  notify:false || false, 
+  verify:false|| false, 
+  app_id:'9mYqMtl2iyjbXGL1QcUabAT9-MdYXbMMI',
+  app_key:'XlZzPkr84BOyGDb1joclACRF',
+  placeholder:'Just go go',
+  path: window.location.pathname,
+  avatar:''
+})
+</script></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>
