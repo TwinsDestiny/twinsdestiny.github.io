@@ -6,7 +6,7 @@
 <li>序列化和反序列话</li>
 <li>手动递归复制</li>
 </ol>
-<h2 id="HashMap原理"><a href="#HashMap原理" class="headerlink" title="HashMap原理"></a>HashMap原理</h2><p>底层使用数组+链表+红黑树<br>数组（Node&lt;K,V&gt;[] table）存储HashMap中的所有键值对，当哈希冲突发生时，多个元素会以链表的方式存储在同一个桶中，当链表长度超过8时，链表会转化为红黑树，提高查找效率。<br>当调用put时，通过key.hashCode()计算哈希值，通过(h^(h&gt;&gt;&gt;16))进行扰动，减少哈希冲突，计算索引位置：index&#x3D;(n-1)&amp;hash（n是数组长度）。<br>HashMap默认初始容量是16，负载因子默认是0.75。当元素个数超过容量<em>负载因子（默认16</em>0.75&#x3D;12）时，触发扩容，将容量翻倍（newCapacity&#x3D;oldCapacity*2），并重新计算hash存储位置。</p>
+<h2 id="HashMap原理"><a href="#HashMap原理" class="headerlink" title="HashMap原理"></a>HashMap原理</h2><p>底层使用数组+链表+红黑树<br>数组（Node&lt;K,V&gt;[] table）存储HashMap中的所有键值对，当哈希冲突发生时，多个元素会以链表的方式存储在同一个桶中，当链表长度超过8时，链表会转化为红黑树，提高查找效率。<br>当调用put时，通过key.hashCode()计算哈希值，通过(h^(h&gt;&gt;&gt;16))进行扰动，减少哈希冲突，计算索引位置：index&#x3D;(n-1)&amp;hash（n是数组长度）。<br>HashMap默认初始容量是16，负载因子默认是0.75。当元素个数超过容量 * 负载因子（默认16 * 0.75&#x3D;12）时，触发扩容，将容量翻倍（newCapacity&#x3D;oldCapacity*2），并重新计算hash存储位置。</p>
 <h2 id="ConcurrentHashMap实现"><a href="#ConcurrentHashMap实现" class="headerlink" title="ConcurrentHashMap实现"></a>ConcurrentHashMap实现</h2><p>jdk1.7 segment数组+HashEntry数组+链表 segment继承ReentrantLock，采用分段锁（默认16），每一把锁只锁一个segment<br>jdk1.8 node数组+链表+红黑树 初始化node使用cas，node值用volatile修饰，放数据使用cas+synchronized</p>
 <h2 id="ConcurrentHashMap的put过程"><a href="#ConcurrentHashMap的put过程" class="headerlink" title="ConcurrentHashMap的put过程"></a>ConcurrentHashMap的put过程</h2><ol>
 <li>延迟初始化table</li>
@@ -24,8 +24,8 @@
 <li>保证字符串池（String Pool）的有效性：字符串池存储了字符串常量，如果String是可变的，那么某个字符串被修改后，其他引用相同字符串的变量也会受到影响。</li>
 <li>避免恶意继承：如果String不是final，开发者可以创建String的子类，并篡改字符串的行为，这可能会引发难以排查的bug。</li>
 </ol>
-<h2 id="想在运行jar包之前，做一些打其他处理"><a href="#想在运行jar包之前，做一些打其他处理" class="headerlink" title="想在运行jar包之前，做一些打其他处理"></a>想在运行jar包之前，做一些打其他处理</h2><h3 id="使用-Java-代理（-javaagent）"><a href="#使用-Java-代理（-javaagent）" class="headerlink" title="使用 Java 代理（-javaagent）"></a>使用 Java 代理（-javaagent）</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -javaagent:myagent.jar -jar myapp.jar</span><br></pre></td></tr></table></figure>
-<h3 id="使用-ClassLoader-代理"><a href="#使用-ClassLoader-代理" class="headerlink" title="使用 ClassLoader 代理"></a>使用 ClassLoader 代理</h3><p>创建一个 自定义的 ClassLoader，在main方法执行前加载A类，并在main方法前后插入代码。</p>
+<h2 id="想在运行jar包之前，做一些打其他处理"><a href="#想在运行jar包之前，做一些打其他处理" class="headerlink" title="想在运行jar包之前，做一些打其他处理"></a>想在运行jar包之前，做一些打其他处理</h2><h4 id="使用-Java-代理（-javaagent）"><a href="#使用-Java-代理（-javaagent）" class="headerlink" title="使用 Java 代理（-javaagent）"></a>使用 Java 代理（-javaagent）</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -javaagent:myagent.jar -jar myapp.jar</span><br></pre></td></tr></table></figure>
+<h4 id="使用-ClassLoader-代理"><a href="#使用-ClassLoader-代理" class="headerlink" title="使用 ClassLoader 代理"></a>使用 ClassLoader 代理</h4><p>创建一个 自定义的 ClassLoader，在main方法执行前加载A类，并在main方法前后插入代码。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -cp bootloader.jar:myapp.jar BootLoader</span><br></pre></td></tr></table></figure>
 
 <h2 id="数据库驱动指定类名后是怎么加载的"><a href="#数据库驱动指定类名后是怎么加载的" class="headerlink" title="数据库驱动指定类名后是怎么加载的"></a>数据库驱动指定类名后是怎么加载的</h2><p>JDBC 连接数据库时，我们通常通过 Class.forName() 手动加载驱动类，其本质是让 JVM 加载指定的类，这样类的静态代码块就会执行，其中通常会调用DriverManager.registerDriver() 方法，将该驱动注册到 JVM 中</p>
@@ -72,7 +72,7 @@
 <li>禁止指令重排 编译器优化、指令并行、内存系统重排</li>
 <li>不能保证原子性</li>
 </ol>
-<h2 id="CAS"><a href="#CAS" class="headerlink" title="CAS"></a>CAS</h2><p>CAS（Compare And Swap，比较并交换）是一种无锁并发编程技术,主要用于乐观锁（Optimistic Locking）<br>比较当前工作内存中的值，如果这个值是期望的，那么则执行操作，如果不是就一直循环<br>伪代码：</p>
+<h2 id="CAS"><a href="#CAS" class="headerlink" title="CAS"></a>CAS</h2><p>CAS（Compare And Swap，比较并交换）是一种无锁并发编程技术,主要用于乐观锁（Optimistic Locking）<br>比较当前工作内存中的值与预期值是否一致，如果一致则更新新值，如果不是就重试<br>伪代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="type">int</span> <span class="variable">oldValue</span> <span class="operator">=</span> atomicValue.get(); <span class="comment">// 读取 V</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">newValue</span> <span class="operator">=</span> oldValue + <span class="number">1</span>; <span class="comment">// 计算新值</span></span><br><span class="line">    <span class="keyword">if</span> (atomicValue.compareAndSet(oldValue, newValue)) &#123; <span class="comment">// CAS 操作</span></span><br><span class="line">        <span class="keyword">break</span>; <span class="comment">// 成功，退出循环</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 失败则重试</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h4><ol>
 <li>无锁并发：避免了线程加锁带来的上下文切换，提高吞吐量。</li>

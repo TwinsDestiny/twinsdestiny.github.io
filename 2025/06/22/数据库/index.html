@@ -81,10 +81,10 @@ SERIALIZABLE
 <h3 id="MVCC-适用的隔离级别"><a href="#MVCC-适用的隔离级别" class="headerlink" title="MVCC 适用的隔离级别"></a>MVCC 适用的隔离级别</h3><p>MVCC适用于READ COMMITTED（读已提交）和REPEATABLE READ（可重复读）</p>
 <h3 id="Read-View（读视图）机制"><a href="#Read-View（读视图）机制" class="headerlink" title="Read View（读视图）机制"></a>Read View（读视图）机制</h3><p>在 MVCC 中，事务查询数据时会生成 Read View，用于判断哪些数据对当前事务可见。<br>Read View 的主要字段</p>
 <ul>
-<li>trx_ids：当前数据库中活跃事务的 ID 列表</li>
-<li>up_limit_id：当前最小的活跃事务 ID</li>
-<li>low_limit_id：创建 Read View 时，数据库已分配的最新事务 ID</li>
-<li>trx_id：当前事务的 ID</li>
+<li>m_ids：当前数据库中活跃事务的 ID 列表</li>
+<li>min_limit_id：当前最小的活跃事务 ID</li>
+<li>max_limit_id：创建 Read View 时，数据库已分配的最新事务 ID</li>
+<li>creator_trx_id：创建ReadView的事务自身的事务ID</li>
 </ul>
 <p>Read View 规则<br>假设 Read View 的 trx_ids &#x3D; {10, 11, 12}：</p>
 <ol>
@@ -103,7 +103,7 @@ SERIALIZABLE
 <li>删除和更新操作的开销：每次UPDATE&#x2F;DELETE操作都要记录undo log，影响性能。</li>
 </ul>
 <h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><h3 id="整数"><a href="#整数" class="headerlink" title="整数"></a>整数</h3><p>TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT<br>INT(11) 不会限制值的合法范围，交互工具显示字符的个数  </p>
-<h3 id="实数"><a href="#实数" class="headerlink" title="实数"></a>实数</h3><p>FLOAT、BOUBLE 浮点运算<br>DECINAL 精确计算</p>
+<h3 id="实数"><a href="#实数" class="headerlink" title="实数"></a>实数</h3><p>FLOAT、BOUBLE 浮点运算<br>DECIMAL 精确计算</p>
 <h3 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h3><p>VARCHAR 可变长字符 使用1或2个（大于255字节）额外字节记录字符串的长度<br>CHAR  定长<br>BLOB 二进制数据 值太大时，使用外部存储区域来进行存储，此时每个值在行内需1-4个字节存储指针<br>TEXT 字符集和排序 </p>
 <h3 id="日期和时间"><a href="#日期和时间" class="headerlink" title="日期和时间"></a>日期和时间</h3><p>DATETIME 与时区无关，8个字节，存储范围大，1001-9999年<br>TIMESTAMP 有时区，4个字节，1970-2038年，默认NOT NULL</p>
 <h2 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a>哈希索引</h2><p>只包含哈希值和行指针，无法排序，只支持等值比较</p>
@@ -120,7 +120,7 @@ SERIALIZABLE
 <li>临键锁（Next-key Lock）：记录锁+间隙锁，锁定一个范围，包括记录本身</li>
 </ol>
 <h2 id="索引失效"><a href="#索引失效" class="headerlink" title="索引失效"></a>索引失效</h2><ol>
-<li>使用了LIKE模糊查询的开头</li>
+<li>使用了LIKE ‘%ABC’</li>
 <li>使用了OR操作符 OR操作符会导致两个条件分别使用不同的索引</li>
 <li>对索引列使用了函数</li>
 <li>使用NULL查询</li>
@@ -131,7 +131,7 @@ SERIALIZABLE
 </ol>
 <h2 id="执行过程"><a href="#执行过程" class="headerlink" title="执行过程"></a>执行过程</h2><ol>
 <li>客户段发送一条查询给服务器</li>
-<li>服务器先检查查询缓存，如果命中了缓存，则立刻返回存储在缓存中的结果，否则进入下一阶段</li>
+<li>服务器先检查缓存，如果命中了缓存，则立刻返回存储在缓存中的结果，否则进入下一阶段</li>
 <li>服务器端通过解析器验证语法是否正确，通过预处理器验证表和字段是否存在，再由优化器生成对应的执行计划，从中选取最优的计划</li>
 <li>执行引擎根据优化器生成的执行计划，调用存储引擎的API执行查询</li>
 <li>将结果返回给客户端</li>
