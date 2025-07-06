@@ -86,11 +86,12 @@ SERIALIZABLE
 <li>max_limit_id：创建 Read View 时，数据库已分配的最新事务 ID</li>
 <li>creator_trx_id：创建ReadView的事务自身的事务ID</li>
 </ul>
-<p>Read View 规则<br>假设 Read View 的 trx_ids &#x3D; {10, 11, 12}：</p>
+<p>Read View 规则<br>假设 Read View 的 m_ids &#x3D; {10, 11, 12}：</p>
 <ol>
-<li>如果 DB_TRX_ID &lt; up_limit_id（事务已提交）  可见</li>
-<li>如果 DB_TRX_ID ∈ trx_ids（事务正在执行）  不可见</li>
-<li>如果 DB_TRX_ID &gt; low_limit_id（事务开始后才修改）  不可见</li>
+<li>如果DB_TRX_ID &lt; min_limit_id（事务已提交） 可见</li>
+<li>如果DB_TRX_ID ∈ m_ids（事务正在执行） 不可见</li>
+<li>如果DB_TRX_ID &gt; max_limit_id（事务开始后才修改） 不可见</li>
+<li>如果DB_TRX_ID &#x3D; creator_trx_id（自己修改的） 可见</li>
 </ol>
 <h3 id="MVCC-优势"><a href="#MVCC-优势" class="headerlink" title="MVCC 优势"></a>MVCC 优势</h3><ul>
 <li>避免加锁：MVCC 主要通过多版本管理数据，而非锁定数据，提升了查询效率。</li>
@@ -102,7 +103,7 @@ SERIALIZABLE
 <li>Undo Log占用空间：长期未提交事务可能导致undo log过多，占用存储空间。</li>
 <li>删除和更新操作的开销：每次UPDATE&#x2F;DELETE操作都要记录undo log，影响性能。</li>
 </ul>
-<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><h3 id="整数"><a href="#整数" class="headerlink" title="整数"></a>整数</h3><p>TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT<br>INT(11) 不会限制值的合法范围，交互工具显示字符的个数  </p>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><h3 id="整数"><a href="#整数" class="headerlink" title="整数"></a>整数</h3><p>TINYINT、SMALLINT、MEDIUMINT、INT、BIGINT<br>INT(11) 不会限制值的合法范围，只影响交互工具显示字符的个数  </p>
 <h3 id="实数"><a href="#实数" class="headerlink" title="实数"></a>实数</h3><p>FLOAT、BOUBLE 浮点运算<br>DECIMAL 精确计算</p>
 <h3 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h3><p>VARCHAR 可变长字符 使用1或2个（大于255字节）额外字节记录字符串的长度<br>CHAR  定长<br>BLOB 二进制数据 值太大时，使用外部存储区域来进行存储，此时每个值在行内需1-4个字节存储指针<br>TEXT 字符集和排序 </p>
 <h3 id="日期和时间"><a href="#日期和时间" class="headerlink" title="日期和时间"></a>日期和时间</h3><p>DATETIME 与时区无关，8个字节，存储范围大，1001-9999年<br>TIMESTAMP 有时区，4个字节，1970-2038年，默认NOT NULL</p>
@@ -113,7 +114,7 @@ SERIALIZABLE
 <li>叶子节点存储数据且用指针相互连接，范围查询更好</li>
 </ol>
 <h2 id="索引覆盖"><a href="#索引覆盖" class="headerlink" title="索引覆盖"></a>索引覆盖</h2><p>一个索引包含所有需要查询的字段的值</p>
-<h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先刷选主键id，再关联查询（需要索引）</p>
+<h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先筛选主键id，再关联查询（需要索引）</p>
 <h2 id="InnoDb行锁"><a href="#InnoDb行锁" class="headerlink" title="InnoDb行锁"></a>InnoDb行锁</h2><ol>
 <li>记录锁（Record Lock）：单个行记录上的锁</li>
 <li>间隙锁（Gap Lock）：锁定一个范围，不包括记录本身</li>
@@ -234,7 +235,7 @@ SERIALIZABLE
 <li>Using filesort:使用外部索引排序</li>
 <li>Range checked for each record:没有好用的索引</li>
 </ul>
-<h2 id="mysql中为什么-like-‘-abc-’-没有走索引，’abc-’-就会走索引"><a href="#mysql中为什么-like-‘-abc-’-没有走索引，’abc-’-就会走索引" class="headerlink" title="mysql中为什么 like ‘%abc%’ 没有走索引，’abc%’ 就会走索引"></a>mysql中为什么 like ‘%abc%’ 没有走索引，’abc%’ 就会走索引</h2><p>MySQL索引（如 +树索引）通常是基于前缀匹配来优化查询的。这意味着，从索引的起始位置开始，索引可以高效地定位到符合条件的记录。<br>当查询模式为LIKE ‘abc%’ 时，’abc%’表示以abc开头的字符串，这时，MySQL可以利用前缀匹配来加速查询。  </p>
+<h2 id="mysql中为什么-like-‘-abc-’-没有走索引，’abc-’-就会走索引"><a href="#mysql中为什么-like-‘-abc-’-没有走索引，’abc-’-就会走索引" class="headerlink" title="mysql中为什么 like ‘%abc%’ 没有走索引，’abc%’ 就会走索引"></a>mysql中为什么 like ‘%abc%’ 没有走索引，’abc%’ 就会走索引</h2><p>MySQL索引（如B+树索引）通常是基于前缀匹配来优化查询的。这意味着，从索引的起始位置开始，索引可以高效地定位到符合条件的记录。<br>当查询模式为LIKE ‘abc%’ 时，’abc%’表示以abc开头的字符串，这时，MySQL可以利用前缀匹配来加速查询。  </p>
 <h2 id="sql执行怎么保证幂等"><a href="#sql执行怎么保证幂等" class="headerlink" title="sql执行怎么保证幂等"></a>sql执行怎么保证幂等</h2><ol>
 <li>唯一约束（最简单有效）</li>
 <li>插入前先判断是否存在（幂等逻辑判断）</li>
@@ -282,7 +283,7 @@ SERIALIZABLE
 <li>布隆过滤器</li>
 <li>限流相同key的查询频率</li>
 </ul>
-<h2 id="redis过期键删除"><a href="#redis过期键删除" class="headerlink" title="redis过期键删除"></a>redis过期键删除</h2><p>惰性过期：访问时才判断是否过期，删除<br>定时过期：每个一段时间扫描一定数量的数据库expires字典中的key</p>
+<h2 id="redis过期键删除"><a href="#redis过期键删除" class="headerlink" title="redis过期键删除"></a>redis过期键删除</h2><p>惰性过期：访问时才判断是否过期，删除<br>定时过期：每隔一段时间扫描一定数量的数据库expires字典中的key</p>
 <h2 id="redisson"><a href="#redisson" class="headerlink" title="redisson"></a>redisson</h2><p>分布式锁，是可重入锁<br>hash结构，使用lua脚本操作<br>锁会自动续期，间隔为锁的过期时间&#x2F;3，如默认30秒过期，则10秒续一次期  </p>
 <hr>
 <h1 id="ElasticSearch"><a href="#ElasticSearch" class="headerlink" title="ElasticSearch"></a><em>ElasticSearch</em></h1><h2 id="倒排索引"><a href="#倒排索引" class="headerlink" title="倒排索引"></a>倒排索引</h2><p>对文本进行切分，分成一个个词项，把词项从小到大排序，查找词项时，通过二分查找，迅速找到文档id。<br>词项索引（term index），提取前缀，构建一个精简的目录树，节点中存放词项在硬盘中的偏移量。<br>用Stored Filed（行式存储）获取文档，用Doc Value（列式存储）排序<br>倒排索引不可变</p>
