@@ -115,10 +115,11 @@ SERIALIZABLE
 </ol>
 <h2 id="索引覆盖"><a href="#索引覆盖" class="headerlink" title="索引覆盖"></a>索引覆盖</h2><p>一个索引包含所有需要查询的字段的值</p>
 <h2 id="延迟关联"><a href="#延迟关联" class="headerlink" title="延迟关联"></a>延迟关联</h2><p>先筛选主键id，再关联查询（需要索引）</p>
-<h2 id="InnoDb行锁"><a href="#InnoDb行锁" class="headerlink" title="InnoDb行锁"></a>InnoDb行锁</h2><ol>
+<h2 id="InnoDb行锁"><a href="#InnoDb行锁" class="headerlink" title="InnoDb行锁"></a>InnoDb行锁</h2><p>行级锁锁的是索引</p>
+<ol>
 <li>记录锁（Record Lock）：单个行记录上的锁</li>
-<li>间隙锁（Gap Lock）：锁定一个范围，不包括记录本身</li>
-<li>临键锁（Next-key Lock）：记录锁+间隙锁，锁定一个范围，包括记录本身</li>
+<li>间隙锁（Gap Lock）：锁定一个范围，不包括记录本身（索引记录之间的间隙，如id&#x3D;5，id&#x3D;10，锁的是5-10的区间）</li>
+<li>临键锁（Next-key Lock）：记录锁+间隙锁，锁定一个范围，包括记录本身（锁左开右闭的区间，如(5,10]）</li>
 </ol>
 <h2 id="索引失效"><a href="#索引失效" class="headerlink" title="索引失效"></a>索引失效</h2><ol>
 <li>使用了LIKE ‘%ABC’</li>
@@ -269,11 +270,14 @@ SERIALIZABLE
 <h2 id="击穿雪崩穿透"><a href="#击穿雪崩穿透" class="headerlink" title="击穿雪崩穿透"></a>击穿雪崩穿透</h2><h3 id="缓存击穿"><a href="#缓存击穿" class="headerlink" title="缓存击穿"></a>缓存击穿</h3><p>热点key突然失效  </p>
 <ul>
 <li>热点key永不过期  </li>
-<li>加锁排队，第一个访问数据库的加redis</li>
+<li>加锁排队，第一个访问数据库的加redis  </li>
+<li>预热</li>
 </ul>
 <h3 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h3><p>缓存集中过期  </p>
 <ul>
 <li>随机失效时间  </li>
+<li>增加本地缓存</li>
+<li>限流</li>
 <li>redis高可用 哨兵模式</li>
 </ul>
 <h3 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h3><p>数据库不存在数据  </p>
