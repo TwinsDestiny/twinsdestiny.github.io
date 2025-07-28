@@ -27,7 +27,74 @@
 <li>第四次挥手：客户端确认服务端关闭，自己也关闭连接</li>
 </ul>
 <p>关闭期间服务端可能还有数据未发送完毕，不能合并ACK+FIN</p>
-<h2 id="HTTPS工作流程"><a href="#HTTPS工作流程" class="headerlink" title="HTTPS工作流程"></a>HTTPS工作流程</h2><p><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMHaIYPzhXmyJ6OhVkEWhOk36nUboMAAlivMRuJXDBEGy66A3F0lhABAAMCAAN3AAM2BA.png" alt="HTTPS工作流程"></p>
+<h2 id="HTTPS工作流程"><a href="#HTTPS工作流程" class="headerlink" title="HTTPS工作流程"></a>HTTPS工作流程</h2><p><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMHaIYPzhXmyJ6OhVkEWhOk36nUboMAAlivMRuJXDBEGy66A3F0lhABAAMCAAN3AAM2BA.png" alt="HTTPS工作流程"><br><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMIaIcb2Wlr0FHbl6bZlF4dAtUpXrkAAvStMRuJXDhE_OLiOQXdtj8BAAMCAAN3AAM2BA.png" alt="加密流程"></p>
+<h4 id="TLS1-2"><a href="#TLS1-2" class="headerlink" title="TLS1.2"></a>TLS1.2</h4><ol>
+<li>客户端发起请求（Client Hello）<br>客户端发起 HTTPS 请求时，发送如下内容：  <ul>
+<li>支持的 TLS 协议版本（如 TLS 1.2）</li>
+<li>支持的加密算法列表（cipher suites）  </li>
+<li>客户端随机数（Client Random）  </li>
+<li>支持的压缩算法  </li>
+<li>可选的扩展（如 SNI，用于支持多域名）</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Client Hello:</span><br><span class="line">  TLS Version: TLS 1.2</span><br><span class="line">  Cipher Suites: [TLS_RSA_WITH_AES_128_GCM_SHA256, ...]</span><br><span class="line">  Client Random: abc123...</span><br><span class="line">  Extensions: SNI: www.example.com</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>服务端响应（Server Hello）<br>服务器返回：<ul>
+<li>确定使用的协议版本</li>
+<li>确定加密算法</li>
+<li>服务器随机数（Server Random）</li>
+<li>服务器数字证书（含公钥）</li>
+<li>是否需要客户端证书（一般不需要）</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Server Hello:</span><br><span class="line">  TLS Version: TLS 1.2</span><br><span class="line">  Cipher Suite: TLS_RSA_WITH_AES_128_GCM_SHA256</span><br><span class="line">  Server Random: def456...</span><br><span class="line">  Certificate: www.example.com (由 CA 签名)</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>客户端验证证书<br>客户端用 内置的 CA 根证书：<ul>
+<li>检查服务端证书是否合法（是否被信任、是否过期）</li>
+<li>验证域名是否一致（CN 或 SAN 字段）</li>
+<li>验证证书签名</li>
+</ul>
+</li>
+<li>客户端生成对称密钥（Pre-Master Secret）  <ul>
+<li>客户端生成一个“预主密钥（Pre-Master Secret）</li>
+<li>用服务端的公钥加密这个密钥</li>
+<li>发送给服务器</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Client Key Exchange:</span><br><span class="line">  Encrypted Pre-Master Secret: RSA加密后的pre-secret</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>服务端解密 Pre-Master Secret<br>服务器用 自己的私钥解密这个 Pre-Master Secret。<br>此时，客户端和服务端都拥有了：  <ul>
+<li>Client Random</li>
+<li>Server Random</li>
+<li>Pre-Master Secret<br>利用这三个值，用同一个算法生成：会话密钥（对称加密密钥）</li>
+</ul>
+</li>
+<li>双方生成会话密钥<br>客户端和服务端根据协商算法生成：<ul>
+<li>对称加密密钥</li>
+<li>消息认证码（MAC）密钥<br>这些密钥将用于接下来的对称加密通信。</li>
+</ul>
+</li>
+<li>客户端发送 Finished<br>客户端：<ul>
+<li>用协商出的对称密钥对握手过程摘要加密</li>
+<li>发送给服务器<br>用于验证前面握手内容是否被篡改。</li>
+</ul>
+</li>
+<li>服务端发送 Finished<br>服务端也发送一份 Finished 消息。</li>
+<li>握手完成，开始加密通信<br>至此，握手阶段结束。客户端和服务器之间可以开始用对称加密进行通信。<br>之后的 HTTP 数据会通过这个会话密钥加密</li>
+</ol>
+<h4 id="TLS1-2-图解"><a href="#TLS1-2-图解" class="headerlink" title="TLS1.2 图解"></a>TLS1.2 图解</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">客户端                服务端</span><br><span class="line">  |  ---ClientHello----&gt; |</span><br><span class="line">  |                      |</span><br><span class="line">  |  &lt;--ServerHello------|</span><br><span class="line">  |  &lt;--Certificate------|</span><br><span class="line">  |  &lt;--ServerHelloDone--|</span><br><span class="line">  |                      |</span><br><span class="line">  |  ---KeyExchange-----&gt;|  (PreMasterSecret加密，用公钥)</span><br><span class="line">  |  ---ChangeCipherSpec |</span><br><span class="line">  |  ---Finished--------&gt;|</span><br><span class="line">  |                      |</span><br><span class="line">  |  &lt;--ChangeCipherSpec |</span><br><span class="line">  |  &lt;-----Finished------|</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="TLS1-3-图解"><a href="#TLS1-3-图解" class="headerlink" title="TLS1.3 图解"></a>TLS1.3 图解</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">客户端                  服务端</span><br><span class="line">  | ----ClientHello(+KeyShare)---&gt; |</span><br><span class="line">  |                                 |</span><br><span class="line">  | &lt;--ServerHello(+KeyShare)------|</span><br><span class="line">  | &lt;--EncryptedExtensions----------|</span><br><span class="line">  | &lt;--Certificate + Verify --------|</span><br><span class="line">  | &lt;--Finished---------------------|</span><br><span class="line">  |                                 |</span><br><span class="line">  | ----Finished-------------------&gt;|</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<ul>
+<li>砍掉旧算法：如 RSA 密钥交换、AES-CBC、SHA-1、MD5，全被移除 。使用ECDHE（ECC子算法）</li>
+<li>合并多个消息：减少消息往返次数  </li>
+<li>加密更多内容：提高抗中间人攻击能力  </li>
+<li>0-RTT 支持：允许客户端恢复连接时直接发送数据（但有重放攻击风险）</li>
+</ul>
+<h2 id="HTTP与RPC的区别"><a href="#HTTP与RPC的区别" class="headerlink" title="HTTP与RPC的区别"></a>HTTP与RPC的区别</h2><h4 id="HTTP（HyperText-Transfer-Protocol）"><a href="#HTTP（HyperText-Transfer-Protocol）" class="headerlink" title="HTTP（HyperText Transfer Protocol）"></a>HTTP（HyperText Transfer Protocol）</h4><p>一种应用层协议，用于客户端与服务器之间传输数据（如 HTML、JSON）<br>文本协议，基于请求&#x2F;响应模型<br>JSON、XML、HTML等<br>前端 Web&#x2F;移动端调用后端 API  </p>
+<h4 id="RPC（Remote-Procedure-Call）"><a href="#RPC（Remote-Procedure-Call）" class="headerlink" title="RPC（Remote Procedure Call）"></a>RPC（Remote Procedure Call）</h4><p>一种通信模型，让调用远程服务就像调用本地函数一样<br>可基于TCP、HTTP、gRPC、WebSocket等<br>通常是二进制（如 Protobuf、Thrift）<br>适合微服务内部调用（如 gRPC、Dubbo）  </p>
 </div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-06-23</span><i class="fa fa-tag"></i><a class="tag" href="/tags/linux/" title="linux">linux </a><a class="tag" href="/tags/tcp/" title="tcp">tcp </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="pre pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E5%9C%BA%E6%99%AF%E9%A2%98/" title="场景题">上一篇</a></li><li class="next pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E4%B8%AD%E9%97%B4%E4%BB%B6/" title="中间件">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
   el:'#vcomments',
   notify:false || false, 
