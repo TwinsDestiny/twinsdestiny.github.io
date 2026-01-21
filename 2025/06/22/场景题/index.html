@@ -71,14 +71,4 @@
 <li>消息队列消费后，再更新Redis，保证最终一致性。</li>
 </ol>
 <h2 id="小内存如何排序大数据"><a href="#小内存如何排序大数据" class="headerlink" title="小内存如何排序大数据"></a>小内存如何排序大数据</h2><p>分组查询数据，每一组单独排序后存入文件，同时读取各组文件，将每组文件的数据按顺序放入败者树中，每一个叶子节点对应一个文件，若该节点的数据胜出，则读取下一个数据，胜出的数据放入一个新文件，直到各组文件读取完毕。<br><img src="https://im.altina.top/file/AgACAgEAAyEGAASHVUETAAMEaAiTjk8FxVIBDkg4iQKGNf56Z1sAArOuMRvoq0FEVTIzAzBR6DIBAAMCAAN4AAM2BA.png" alt="败者树"></p>
-</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-06-23</span><i class="fa fa-tag"></i><a class="tag" href="/tags/设计模式/" title="设计模式">设计模式 </a><a class="tag" href="/tags/场景/" title="场景">场景 </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统">下一篇</a></li></ul></div><a id="comments"></a><div id="vcomments" style="margin:0 30px;"></div><script src="//code.bdstatic.com/npm/leancloud-storage@4.12.0/dist/av-min.js"></script><script src="//cdn.jsdelivr.net/gh/xcss/valine@v1.1.7/dist/Valine.min.js?v=undefined"></script><script>var valine = new Valine({
-  el:'#vcomments',
-  notify:false || false, 
-  verify:false|| false, 
-  app_id:'9mYqMtl2iyjbXGL1QcUabAT9-MdYXbMMI',
-  app_key:'XlZzPkr84BOyGDb1joclACRF',
-  placeholder:'Just go go',
-  path: window.location.pathname,
-  avatar:''
-})
-</script></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>
+</div><div class="post-footer"><div class="meta"><div class="info"><i class="fa fa-sun-o"></i><span class="date">2025-06-23</span><i class="fa fa-tag"></i><a class="tag" href="/tags/设计模式/" title="设计模式">设计模式 </a><a class="tag" href="/tags/场景/" title="场景">场景 </a></div></div></div></div><div class="pagination"><ul class="clearfix"><li class="next pagbuttons"><a class="btn" role="navigation" href="/2025/06/22/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="操作系统">下一篇</a></li></ul></div></div></div></div></div><script src="/js/jquery.js"></script><script src="/js/jquery-migrate-1.2.1.min.js"></script><script src="/js/jquery.appear.js"></script></body></html>
